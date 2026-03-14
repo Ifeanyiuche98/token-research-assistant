@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/loadingstate.tsx","./src/components/researchnote.tsx","./src/components/tokenform.tsx","./src/data/mockresearch.ts","./src/types/research.ts","./src/utils/generateresearchnote.ts"],"version":"5.9.3"}
