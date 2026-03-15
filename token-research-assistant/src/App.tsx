@@ -89,6 +89,7 @@ function App() {
   const isLoading = uiState?.type === 'loading';
   const isNotFound = uiState?.type === 'not_found';
   const isErrorState = uiState?.type === 'error' && !isLoading;
+  const activeResponse = uiState?.type === 'live_result' || uiState?.type === 'fallback_result' ? uiState.data : null;
 
   return (
     <main className="page">
@@ -185,7 +186,7 @@ function App() {
         </section>
       ) : null}
 
-      {note && !isLoading && <ResearchNote note={note} />}
+      {note && !isLoading && <ResearchNote note={note} response={activeResponse} />}
     </main>
   );
 }
