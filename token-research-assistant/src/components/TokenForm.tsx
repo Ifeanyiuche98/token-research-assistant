@@ -3,9 +3,11 @@ type TokenFormProps = {
   onChange: (value: string) => void;
   onSubmit: () => void;
   onSelectSample: (value: string) => void;
+  onClear: () => void;
   isLoading: boolean;
   error: string;
   samples: string[];
+  hasActiveState: boolean;
 };
 
 export function TokenForm({
@@ -13,9 +15,11 @@ export function TokenForm({
   onChange,
   onSubmit,
   onSelectSample,
+  onClear,
   isLoading,
   error,
-  samples
+  samples,
+  hasActiveState
 }: TokenFormProps) {
   return (
     <div className="card form-card">
@@ -47,6 +51,9 @@ export function TokenForm({
           ) : (
             'Generate note'
           )}
+        </button>
+        <button type="button" className="secondary-button clear-button" onClick={onClear} disabled={isLoading || !hasActiveState}>
+          Clear
         </button>
       </div>
 

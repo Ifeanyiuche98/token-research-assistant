@@ -22,18 +22,17 @@ function App() {
     }
   };
 
-  const handleSelectSample = (value: string) => {
-    setQuery(value);
-    setError('');
-  };
-
-  const handleGenerate = async () => {
-    const trimmedQuery = query.trim();
+  const handleGenerate = async (nextQuery?: string) => {
+    const trimmedQuery = (nextQuery ?? query).trim();
 
     if (!trimmedQuery) {
       setError('Please enter a token or project name before generating a note.');
       setNote(null);
       return;
+    }
+
+    if (nextQuery) {
+      setQuery(nextQuery);
     }
 
     setError('');
@@ -47,10 +46,23 @@ function App() {
     }
   };
 
+  const handleSelectSample = (value: string) => {
+    setError('');
+    void handleGenerate(value);
+  };
+
+  const handleClear = () => {
+    setQuery('');
+    setNote(null);
+    setError('');
+  };
+
+  const hasActiveState = Boolean(query.trim() || note || error);
+
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">Phase 4</p>
+        <p className="eyebrow">Phase 5</p>
         <h1>Token Research Assistant</h1>
         <p className="subtitle">
           Enter a token or project name and get a short research note in a clean, readable format.
@@ -60,11 +72,13 @@ function App() {
       <TokenForm
         value={query}
         onChange={handleChange}
-        onSubmit={handleGenerate}
+        onSubmit={() => void handleGenerate()}
         onSelectSample={handleSelectSample}
+        onClear={handleClear}
         isLoading={isLoading}
         error={error}
         samples={quickSamples}
+        hasActiveState={hasActiveState}
       />
 
       {!note && !isLoading ? (

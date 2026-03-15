@@ -144,6 +144,10 @@ h1 {
   box-shadow: none;
 }
 
+.clear-button {
+  min-width: 88px;
+}
+
 .button:hover:not(:disabled),
 .secondary-button:hover:not(:disabled),
 .chip-button:hover:not(:disabled) {
