@@ -62,7 +62,7 @@ function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">Phase 5</p>
+        <p className="eyebrow">Phase 6</p>
         <h1>Token Research Assistant</h1>
         <p className="subtitle">
           Enter a token or project name and get a short research note in a clean, readable format.
@@ -83,18 +83,41 @@ function App() {
 
       {!note && !isLoading ? (
         <section className="card state-card empty-state">
-          <p className="state-kicker">Ready to research</p>
-          <h2>Start with a known token or try any project name</h2>
+          <div className="empty-state-top">
+            <div className="empty-state-icon" aria-hidden="true">
+              ✦
+            </div>
+            <div>
+              <p className="state-kicker">Welcome</p>
+              <h2>Start your first quick token research note</h2>
+            </div>
+          </div>
+
           <p className="state-copy">
-            The local research engine currently knows a small starter set and can still return a careful fallback note for unknown inputs.
+            Type any token or project name to generate a short note with a summary, use case, risks, and ecosystem notes.
           </p>
-          <p className="state-list-label">Built-in examples</p>
-          <div className="chip-list">
-            {supportedProjects.map((project) => (
-              <span key={project} className="chip">
-                {project}
-              </span>
-            ))}
+
+          <div className="empty-state-grid">
+            <div className="empty-state-panel">
+              <p className="state-list-label">What you will get</p>
+              <ul className="state-list">
+                <li>Short summary</li>
+                <li>Main use case</li>
+                <li>Key risks to watch</li>
+                <li>Ecosystem context</li>
+              </ul>
+            </div>
+
+            <div className="empty-state-panel">
+              <p className="state-list-label">Built-in examples</p>
+              <div className="chip-list">
+                {supportedProjects.map((project) => (
+                  <span key={project} className="chip">
+                    {project}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       ) : null}

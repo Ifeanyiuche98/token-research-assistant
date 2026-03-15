@@ -35,7 +35,12 @@ export function ResearchNote({ note }: ResearchNoteProps) {
       <div className="note-header">
         <div className="note-header-top">
           <div>
-            <p className="note-kicker">{note.isFallback ? 'Fallback research note' : 'Markdown-style research note'}</p>
+            <div className="note-title-row">
+              <p className="note-kicker">{note.isFallback ? 'Fallback research note' : 'Markdown-style research note'}</p>
+              <span className={`result-status-badge ${note.isFallback ? 'result-status-fallback' : 'result-status-known'}`}>
+                {note.isFallback ? 'Fallback note' : 'Known dataset match'}
+              </span>
+            </div>
             <h2>{note.project}</h2>
           </div>
           <button type="button" className="secondary-button" onClick={handleCopy}>
