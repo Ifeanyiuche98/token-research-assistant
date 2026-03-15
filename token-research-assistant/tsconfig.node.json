@@ -4,7 +4,9 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "Node",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"]
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "src/lib/**/*.ts", "src/data/**/*.ts", "src/types/**/*.ts"]
 }
