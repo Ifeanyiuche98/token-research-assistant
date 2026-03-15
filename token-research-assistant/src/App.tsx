@@ -6,6 +6,8 @@ import type { ResearchNote as ResearchNoteType } from './types/research';
 import { generateResearchNote } from './utils/generateResearchNote';
 import { supportedProjects } from './data/mockResearch';
 
+const quickSamples = ['Bitcoin', 'Ethereum', 'Solana', 'Chainlink', 'Uniswap'];
+
 function App() {
   const [query, setQuery] = useState('');
   const [note, setNote] = useState<ResearchNoteType | null>(null);
@@ -18,6 +20,11 @@ function App() {
     if (error && value.trim()) {
       setError('');
     }
+  };
+
+  const handleSelectSample = (value: string) => {
+    setQuery(value);
+    setError('');
   };
 
   const handleGenerate = async () => {
@@ -43,7 +50,7 @@ function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">Phase 3</p>
+        <p className="eyebrow">Phase 4</p>
         <h1>Token Research Assistant</h1>
         <p className="subtitle">
           Enter a token or project name and get a short research note in a clean, readable format.
@@ -54,8 +61,10 @@ function App() {
         value={query}
         onChange={handleChange}
         onSubmit={handleGenerate}
+        onSelectSample={handleSelectSample}
         isLoading={isLoading}
         error={error}
+        samples={quickSamples}
       />
 
       {!note && !isLoading ? (

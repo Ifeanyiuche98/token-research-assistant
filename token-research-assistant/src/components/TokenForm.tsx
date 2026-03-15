@@ -2,11 +2,21 @@ type TokenFormProps = {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  onSelectSample: (value: string) => void;
   isLoading: boolean;
   error: string;
+  samples: string[];
 };
 
-export function TokenForm({ value, onChange, onSubmit, isLoading, error }: TokenFormProps) {
+export function TokenForm({
+  value,
+  onChange,
+  onSubmit,
+  onSelectSample,
+  isLoading,
+  error,
+  samples
+}: TokenFormProps) {
   return (
     <div className="card form-card">
       <label className="label" htmlFor="project-name">
@@ -39,6 +49,24 @@ export function TokenForm({ value, onChange, onSubmit, isLoading, error }: Token
           )}
         </button>
       </div>
+
+      <div className="sample-row">
+        <p className="sample-label">Quick examples</p>
+        <div className="chip-list">
+          {samples.map((sample) => (
+            <button
+              key={sample}
+              type="button"
+              className="chip chip-button"
+              onClick={() => onSelectSample(sample)}
+              disabled={isLoading}
+            >
+              {sample}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error ? (
         <p id="project-name-error" className="error-text" role="alert">
           {error}
