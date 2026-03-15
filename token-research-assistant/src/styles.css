@@ -184,6 +184,17 @@ h2 {
   justify-content: space-between;
 }
 
+.note-header-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.note-header-copy {
+  min-width: 0;
+}
+
 .note-title-row,
 .empty-state-top {
   align-items: center;
@@ -323,6 +334,24 @@ h2 {
   background: linear-gradient(180deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.35));
 }
 
+.note-logo-shell {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.note-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
 .note-intro {
   margin: 10px 0 0;
   max-width: 640px;
@@ -331,6 +360,22 @@ h2 {
 
 .note-meta {
   margin-top: 14px;
+}
+
+.category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.category-chip {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(129, 140, 248, 0.22);
+  background: rgba(99, 102, 241, 0.12);
+  color: #dbeafe;
+  font-size: 0.86rem;
 }
 
 .note-badge,
@@ -490,6 +535,7 @@ h2 {
 
   .form-row,
   .note-header-top,
+  .note-header-main,
   .empty-state-top,
   .empty-state-grid {
     flex-direction: column;
