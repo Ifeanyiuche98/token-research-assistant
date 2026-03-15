@@ -4,4 +4,7 @@ export type ResearchNote = {
   useCase: string;
   risks: string;
   ecosystemNotes: string;
+  matchedOn: string;
+  aliases: string[];
+  isFallback: boolean;
 };

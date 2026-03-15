@@ -13,13 +13,22 @@ const sections = [
 
 export function ResearchNote({ note }: ResearchNoteProps) {
   return (
-    <section className="card note-card">
+    <section className={`card note-card ${note.isFallback ? 'note-card-fallback' : ''}`}>
       <div className="note-header">
-        <p className="note-kicker">Markdown-style research note</p>
+        <p className="note-kicker">{note.isFallback ? 'Fallback research note' : 'Markdown-style research note'}</p>
         <h2>{note.project}</h2>
         <p className="note-intro">
-          A short, readable overview intended for quick first-pass research rather than deep due diligence.
+          {note.isFallback
+            ? 'This project is not yet part of the built-in dataset, so the note below is a careful research checklist-style fallback.'
+            : 'A short, readable overview intended for quick first-pass research rather than deep due diligence.'}
         </p>
+
+        <div className="note-meta">
+          <span className="note-badge">Matched on: {note.matchedOn}</span>
+          {!note.isFallback && note.aliases.length > 0 ? (
+            <span className="note-badge">Aliases: {note.aliases.join(', ')}</span>
+          ) : null}
+        </div>
       </div>
 
       <div className="note-markdown">

@@ -1,7 +1,11 @@
 import type { ResearchNote } from '../types/research';
-import { getMockResearchNote } from '../data/mockResearch';
+import { getResearchNote } from '../data/mockResearch';
 
 export async function generateResearchNote(query: string): Promise<ResearchNote> {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return getMockResearchNote(query);
+  const normalizedQuery = query.trim();
+  const delay = normalizedQuery.length > 8 ? 850 : 650;
+
+  await new Promise((resolve) => setTimeout(resolve, delay));
+
+  return getResearchNote(normalizedQuery);
 }

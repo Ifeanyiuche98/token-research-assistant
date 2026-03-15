@@ -132,10 +132,13 @@ h1 {
 }
 
 .button-content,
-.loading-inline {
-  display: inline-flex;
+.loading-inline,
+.note-meta,
+.chip-list {
+  display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .helper-text,
@@ -182,9 +185,47 @@ h1 {
   color: #94a3b8;
 }
 
+.state-card h2,
+.note-card h2 {
+  margin: 0;
+}
+
+.empty-state {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.7));
+}
+
+.state-kicker,
+.note-kicker,
+.state-list-label {
+  margin: 0 0 8px;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+.state-copy {
+  margin: 12px 0 16px;
+  color: #cbd5e1;
+  max-width: 650px;
+}
+
+.chip {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: rgba(37, 99, 235, 0.12);
+  color: #dbeafe;
+  font-size: 0.92rem;
+}
+
 .note-card {
   padding: 0;
   overflow: hidden;
+}
+
+.note-card-fallback {
+  border-color: rgba(251, 191, 36, 0.28);
 }
 
 .note-header {
@@ -193,23 +234,23 @@ h1 {
   background: linear-gradient(180deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.35));
 }
 
-.note-kicker {
-  margin: 0 0 8px;
-  color: #93c5fd;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.8rem;
-}
-
-.note-card h2 {
-  margin: 0;
-  font-size: 1.75rem;
-}
-
 .note-intro {
   margin: 10px 0 0;
   max-width: 640px;
   color: #cbd5e1;
+}
+
+.note-meta {
+  margin-top: 14px;
+}
+
+.note-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+  font-size: 0.88rem;
 }
 
 .note-markdown {
