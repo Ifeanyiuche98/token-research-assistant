@@ -14,7 +14,9 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.18), transparent 35%),
+    linear-gradient(180deg, #0f172a 0%, #111827 100%);
 }
 
 button,
@@ -22,8 +24,14 @@ input {
   font: inherit;
 }
 
+body,
+input,
+button {
+  color: #e5e7eb;
+}
+
 .page {
-  max-width: 800px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 48px 20px 64px;
 }
@@ -47,20 +55,25 @@ h1 {
 
 .subtitle {
   margin: 0;
+  max-width: 680px;
   color: #cbd5e1;
 }
 
 .card {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 16px;
-  padding: 20px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 22px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.32);
 }
 
 .card + .card {
   margin-top: 16px;
+}
+
+.form-card {
+  padding-bottom: 16px;
 }
 
 .label {
@@ -72,30 +85,112 @@ h1 {
 .form-row {
   display: flex;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .input {
   flex: 1;
+  min-height: 48px;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid #334155;
   background: #0b1220;
-  color: #e5e7eb;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15);
+}
+
+.input-error {
+  border-color: #f87171;
+  box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.12);
 }
 
 .button {
   border: none;
   border-radius: 12px;
-  padding: 12px 16px;
-  background: #2563eb;
+  min-height: 48px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   cursor: pointer;
   font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .button:disabled {
-  opacity: 0.6;
+  opacity: 0.75;
   cursor: not-allowed;
+}
+
+.button-content,
+.loading-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.helper-text,
+.error-text {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+}
+
+.helper-text {
+  color: #94a3b8;
+}
+
+.error-text {
+  color: #fca5a5;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.spinner-large {
+  width: 20px;
+  height: 20px;
+}
+
+.loading-state {
+  color: #dbe4f0;
+}
+
+.loading-title {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.loading-copy {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.note-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.note-header {
+  padding: 24px 24px 18px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.35));
 }
 
 .note-kicker {
@@ -107,31 +202,63 @@ h1 {
 }
 
 .note-card h2 {
-  margin-top: 0;
-  margin-bottom: 16px;
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.note-intro {
+  margin: 10px 0 0;
+  max-width: 640px;
+  color: #cbd5e1;
+}
+
+.note-markdown {
+  padding: 20px 24px 24px;
+}
+
+.note-section {
+  padding: 16px 0;
 }
 
 .note-section + .note-section {
-  margin-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .note-section h3 {
-  margin: 0 0 6px;
+  margin: 0 0 10px;
+  color: #bfdbfe;
+  font-size: 1rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.note-section p {
+  margin: 0;
+  color: #e2e8f0;
   font-size: 1rem;
 }
 
-.note-section p,
-.loading-state p {
-  margin: 0;
-  color: #dbe4f0;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 640px) {
+  .page {
+    padding: 32px 16px 48px;
+  }
+
   .form-row {
     flex-direction: column;
   }
 
   .button {
     width: 100%;
+  }
+
+  .note-header,
+  .note-markdown {
+    padding-left: 18px;
+    padding-right: 18px;
   }
 }

@@ -3,18 +3,19 @@ type TokenFormProps = {
   onChange: (value: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
+  error: string;
 };
 
-export function TokenForm({ value, onChange, onSubmit, isLoading }: TokenFormProps) {
+export function TokenForm({ value, onChange, onSubmit, isLoading, error }: TokenFormProps) {
   return (
-    <div className="card">
+    <div className="card form-card">
       <label className="label" htmlFor="project-name">
         Token or project name
       </label>
       <div className="form-row">
         <input
           id="project-name"
-          className="input"
+          className={`input ${error ? 'input-error' : ''}`}
           type="text"
           placeholder="e.g. Bitcoin, Ethereum, Solana"
           value={value}
@@ -24,11 +25,27 @@ export function TokenForm({ value, onChange, onSubmit, isLoading }: TokenFormPro
               onSubmit();
             }
           }}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? 'project-name-error' : undefined}
         />
-        <button className="button" onClick={onSubmit} disabled={isLoading || !value.trim()}>
-          {isLoading ? 'Generating...' : 'Generate note'}
+        <button className="button" onClick={onSubmit} disabled={isLoading}>
+          {isLoading ? (
+            <span className="button-content">
+              <span className="spinner" aria-hidden="true" />
+              Generating...
+            </span>
+          ) : (
+            'Generate note'
+          )}
         </button>
       </div>
+      {error ? (
+        <p id="project-name-error" className="error-text" role="alert">
+          {error}
+        </p>
+      ) : (
+        <p className="helper-text">Try a token name, protocol, or crypto project you want to summarize.</p>
+      )}
     </div>
   );
 }

@@ -4,30 +4,31 @@ type ResearchNoteProps = {
   note: ResearchNoteType;
 };
 
+const sections = [
+  { title: 'Summary', content: (note: ResearchNoteType) => note.summary },
+  { title: 'Use Case', content: (note: ResearchNoteType) => note.useCase },
+  { title: 'Risks', content: (note: ResearchNoteType) => note.risks },
+  { title: 'Ecosystem Notes', content: (note: ResearchNoteType) => note.ecosystemNotes }
+];
+
 export function ResearchNote({ note }: ResearchNoteProps) {
   return (
     <section className="card note-card">
-      <p className="note-kicker">Research note</p>
-      <h2>{note.project}</h2>
-
-      <div className="note-section">
-        <h3>Summary</h3>
-        <p>{note.summary}</p>
+      <div className="note-header">
+        <p className="note-kicker">Markdown-style research note</p>
+        <h2>{note.project}</h2>
+        <p className="note-intro">
+          A short, readable overview intended for quick first-pass research rather than deep due diligence.
+        </p>
       </div>
 
-      <div className="note-section">
-        <h3>Use Case</h3>
-        <p>{note.useCase}</p>
-      </div>
-
-      <div className="note-section">
-        <h3>Risks</h3>
-        <p>{note.risks}</p>
-      </div>
-
-      <div className="note-section">
-        <h3>Ecosystem Notes</h3>
-        <p>{note.ecosystemNotes}</p>
+      <div className="note-markdown">
+        {sections.map((section) => (
+          <article key={section.title} className="note-section">
+            <h3>## {section.title}</h3>
+            <p>{section.content(note)}</p>
+          </article>
+        ))}
       </div>
     </section>
   );

@@ -9,29 +9,53 @@ function App() {
   const [query, setQuery] = useState('');
   const [note, setNote] = useState<ResearchNoteType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+
+    if (error && value.trim()) {
+      setError('');
+    }
+  };
 
   const handleGenerate = async () => {
-    if (!query.trim()) {
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
+      setError('Please enter a token or project name before generating a note.');
+      setNote(null);
       return;
     }
 
+    setError('');
     setIsLoading(true);
-    const result = await generateResearchNote(query);
-    setNote(result);
-    setIsLoading(false);
+
+    try {
+      const result = await generateResearchNote(trimmedQuery);
+      setNote(result);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">Phase 1</p>
+        <p className="eyebrow">Phase 2</p>
         <h1>Token Research Assistant</h1>
         <p className="subtitle">
           Enter a token or project name and get a short research note in a clean, readable format.
         </p>
       </section>
 
-      <TokenForm value={query} onChange={setQuery} onSubmit={handleGenerate} isLoading={isLoading} />
+      <TokenForm
+        value={query}
+        onChange={handleChange}
+        onSubmit={handleGenerate}
+        isLoading={isLoading}
+        error={error}
+      />
 
       {isLoading && <LoadingState />}
       {note && !isLoading && <ResearchNote note={note} />}
