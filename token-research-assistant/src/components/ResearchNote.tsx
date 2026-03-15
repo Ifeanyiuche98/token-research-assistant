@@ -78,6 +78,20 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
   const marketItems = buildMarketItems(response);
   const linkItems = buildLinkItems(response);
   const liveResult = response?.status === 'live';
+  const logoUrl = response?.result?.media.smallUrl ?? response?.result?.media.thumbUrl ?? null;
+  const categories = response?.result?.project.categories ?? [];
+  const visibleCategories = categories.slice(0, 8);
+  const sourceCopy = note.isFallback
+    ? {
+        kicker: 'Fallback research result',
+        badge: 'Local fallback',
+        intro: 'Live CoinGecko data was unavailable for this lookup, so you are seeing the app’s local fallback research instead.'
+      }
+    : {
+        kicker: 'Live research result',
+        badge: 'Live · CoinGecko',
+        intro: 'This result includes live CoinGecko project data, with market fields and official links separated for easier scanning.'
+      };
 
   const handleCopy = async () => {
     try {
@@ -94,30 +108,45 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
     <section className={`card note-card ${note.isFallback ? 'note-card-fallback' : ''}`}>
       <div className="note-header">
         <div className="note-header-top">
-          <div>
-            <div className="note-title-row">
-              <p className="note-kicker">{note.isFallback ? 'Fallback research note' : 'Live research note'}</p>
-              <span className={`result-status-badge ${note.isFallback ? 'result-status-fallback' : 'result-status-known'}`}>
-                {note.isFallback ? 'Fallback result' : 'Live result'}
-              </span>
+          <div className="note-header-main">
+            {logoUrl ? (
+              <div className="note-logo-shell">
+                <img src={logoUrl} alt={`${note.project} logo`} className="note-logo" loading="lazy" />
+              </div>
+            ) : null}
+
+            <div className="note-header-copy">
+              <div className="note-title-row">
+                <p className="note-kicker">{sourceCopy.kicker}</p>
+                <span className={`result-status-badge ${note.isFallback ? 'result-status-fallback' : 'result-status-known'}`}>
+                  {sourceCopy.badge}
+                </span>
+              </div>
+              <h2>{note.project}</h2>
             </div>
-            <h2>{note.project}</h2>
           </div>
+
           <button type="button" className="secondary-button" onClick={handleCopy}>
             {copyStatus === 'copied' ? 'Copied' : copyStatus === 'failed' ? 'Copy failed' : 'Copy Note'}
           </button>
         </div>
 
-        <p className="note-intro">
-          {note.isFallback
-            ? 'Live lookup did not return a usable result, so the app is showing local fallback research.'
-            : 'Live CoinGecko data is available for this project, with the main market fields shown separately below.'}
-        </p>
+        <p className="note-intro">{sourceCopy.intro}</p>
 
         <div className="note-meta">
           <span className="note-badge">Matched on: {note.matchedOn}</span>
           {!note.isFallback && note.aliases.length > 0 ? <span className="note-badge">Symbol: {note.aliases.join(', ')}</span> : null}
         </div>
+
+        {visibleCategories.length > 0 ? (
+          <div className="category-row" aria-label="Project categories">
+            {visibleCategories.map((category) => (
+              <span key={category} className="category-chip">
+                {category}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {marketItems.length > 0 ? (
@@ -162,10 +191,16 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
           </article>
         ))}
 
-        {!liveResult && response?.result?.project.categories.length ? (
+        {!liveResult && categories.length > 0 ? (
           <article className="note-section">
             <h3>## Categories</h3>
-            <p>{response.result.project.categories.join(', ')}</p>
+            <div className="category-row">
+              {categories.map((category) => (
+                <span key={category} className="category-chip">
+                  {category}
+                </span>
+              ))}
+            </div>
           </article>
         ) : null}
       </div>
