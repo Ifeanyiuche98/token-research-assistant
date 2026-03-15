@@ -1,58 +1,87 @@
 # token-research-assistant
 
-A tiny TypeScript web app for generating short research notes about a token or crypto project.
+A lightweight frontend web app for generating short research notes about crypto tokens and projects.
 
-## Goal
+The goal is to keep the project simple, beginner-friendly, and easy to deploy. A user enters a token or project name, clicks a button, and gets a short markdown-style note with the most important first-pass research points.
 
-Keep phase 1 very small:
+## Overview
 
-- enter a token or project name
-- click **Generate note**
-- show a short markdown-style note with:
+This app is intentionally frontend-only for now.
+
+It uses a small local research dataset plus a graceful fallback mode for unknown inputs. That makes it useful for demos without needing a backend, API keys, or external services.
+
+## Stack
+
+- **Vite**
+- **React**
+- **TypeScript**
+- **Plain CSS**
+
+Why this stack:
+
+- fast local development
+- simple project structure
+- low setup complexity
+- easy deployment to Vercel
+
+## Current MVP Features
+
+- search by token or project name
+- generate a short research note with:
   - summary
   - use case
   - risks
   - ecosystem notes
+- loading state while generating
+- validation for empty input
+- quick example chips for fast testing
+- auto-submit when clicking a sample chip
+- clear button to reset the form and result
+- copy note button for easy sharing
+- known dataset match vs fallback status badge
+- welcoming empty state before first search
 
-This version is optimized for a **first working demo**, not production complexity.
+## Supported Built-in Projects
 
-## Recommended Stack
+The local dataset currently includes:
 
-- **Vite** — fast, simple dev setup
-- **React** — easy component model for a small UI
-- **TypeScript** — required, and keeps the code safer
-- **Plain CSS** — enough for a clean first version
+- Bitcoin
+- Ethereum
+- Solana
+- Chainlink
+- Uniswap
 
-Why this stack?
+Unknown inputs still return a cautious fallback research note.
 
-- minimal setup
-- beginner-friendly
-- fast local development
-- no unnecessary backend for phase 1
+## Local Development
 
-## MVP
+Install dependencies:
 
-### User flow
+```bash
+npm install
+```
 
-1. User enters a token or project name
-2. User clicks **Generate note**
-3. App returns a short research note in a clean output card
+Start the development server:
 
-### Output sections
+```bash
+npm run dev
+```
 
-- **Summary**
-- **Use Case**
-- **Risks**
-- **Ecosystem Notes**
+Then open the local URL shown in the terminal.
 
-## Suggested Phase 1 Scope
+## Production Build
 
-For the first demo, keep the generation logic simple:
+Create a production build:
 
-- start with **mock data** or a local function
-- optionally replace it later with a real API or LLM backend
+```bash
+npm run build
+```
 
-That means the UI can be built and demoed quickly before adding external integrations.
+Preview the production build locally:
+
+```bash
+npm run preview
+```
 
 ## Project Structure
 
@@ -61,13 +90,13 @@ token-research-assistant/
 ├─ public/
 ├─ src/
 │  ├─ components/
-│  │  ├─ TokenForm.tsx
+│  │  ├─ LoadingState.tsx
 │  │  ├─ ResearchNote.tsx
-│  │  └─ LoadingState.tsx
-│  ├─ types/
-│  │  └─ research.ts
+│  │  └─ TokenForm.tsx
 │  ├─ data/
 │  │  └─ mockResearch.ts
+│  ├─ types/
+│  │  └─ research.ts
 │  ├─ utils/
 │  │  └─ generateResearchNote.ts
 │  ├─ App.tsx
@@ -75,49 +104,27 @@ token-research-assistant/
 │  └─ styles.css
 ├─ index.html
 ├─ package.json
+├─ tsconfig.app.json
 ├─ tsconfig.json
 ├─ tsconfig.node.json
-└─ vite.config.ts
+├─ vite.config.ts
+└─ README.md
 ```
 
-## Main Pages and Components
+## Vercel Deployment Notes
 
-### Pages
+This project is a standard Vite static frontend, so it is a good fit for Vercel.
 
-For phase 1, a **single-page app** is enough.
+Typical Vercel settings:
 
-- **Home page**
-  - token/project input
-  - generate button
-  - result display
+- **Framework Preset:** Vite
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
 
-### Components
+No backend setup is required for the current version.
 
-- **TokenForm**
-  - text input
-  - submit button
-- **ResearchNote**
-  - displays the generated result
-- **LoadingState**
-  - simple loading message/spinner while generating
+## Status
 
-## Getting Started
+The app is deployment-ready as a frontend-only Vercel project.
 
-```bash
-npm install
-npm run dev
-```
-
-Then open the local URL shown in the terminal.
-
-## Next Steps After Phase 1
-
-- connect the app to a real research API or LLM
-- add input validation
-- add error handling for failed requests
-- support markdown rendering
-- keep a small history of recent searches
-
-## Notes
-
-Phase 1 should stay intentionally small. The main win is getting a clean demo working end-to-end as fast as possible.
+Future upgrades can add a real research API or AI generation layer, but the current version is intentionally small and demo-friendly.
