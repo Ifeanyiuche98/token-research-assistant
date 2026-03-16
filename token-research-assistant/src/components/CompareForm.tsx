@@ -3,6 +3,7 @@ type CompareFormProps = {
   rightValue: string;
   onLeftChange: (value: string) => void;
   onRightChange: (value: string) => void;
+  onSwap: () => void;
   onSubmit: () => void;
   onClear: () => void;
   isLoading: boolean;
@@ -15,6 +16,7 @@ export function CompareForm({
   rightValue,
   onLeftChange,
   onRightChange,
+  onSwap,
   onSubmit,
   onClear,
   isLoading,
@@ -32,7 +34,7 @@ export function CompareForm({
         </div>
       </div>
 
-      <div className="compare-form-grid">
+      <div className="compare-form-grid compare-form-grid-with-swap">
         <div>
           <label className="compare-input-label" htmlFor="compare-token-a">
             Token A
@@ -50,6 +52,19 @@ export function CompareForm({
               }
             }}
           />
+        </div>
+
+        <div className="compare-swap-shell">
+          <button
+            type="button"
+            className="secondary-button compare-swap-button"
+            onClick={onSwap}
+            disabled={isLoading}
+            aria-label="Swap Token A and Token B"
+            title="Swap tokens"
+          >
+            ⇄
+          </button>
         </div>
 
         <div>

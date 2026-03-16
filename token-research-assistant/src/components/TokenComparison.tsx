@@ -5,11 +5,15 @@ type TokenComparisonProps = {
   comparison: CompareResponse;
 };
 
+type HighlightSide = 'left' | 'right' | null;
+
 type ComparisonField = {
   label: string;
   left: string;
   right: string;
-  tone?: 'positive' | 'negative';
+  leftRaw?: number | null;
+  rightRaw?: number | null;
+  highlight?: HighlightSide;
 };
 
 function formatCurrency(value: number | null) {
@@ -87,20 +91,44 @@ function getLink(response: ResearchResponse, key: 'homepage' | 'twitter' | 'gith
   return response.result?.links[key][0] ?? '—';
 }
 
+function getHigherValueHighlight(leftValue: number | null, rightValue: number | null): HighlightSide {
+  if (leftValue === null || rightValue === null) {
+    return null;
+  }
+
+  if (leftValue === rightValue) {
+    return null;
+  }
+
+  return leftValue > rightValue ? 'left' : 'right';
+}
+
+function buildNumericField(label: string, leftValue: number | null, rightValue: number | null, formatter: (value: number | null) => string): ComparisonField {
+  return {
+    label,
+    left: formatter(leftValue),
+    right: formatter(rightValue),
+    leftRaw: leftValue,
+    rightRaw: rightValue,
+    highlight: getHigherValueHighlight(leftValue, rightValue)
+  };
+}
+
 function buildFields(left: ResearchResponse, right: ResearchResponse) {
-  const leftChange = left.result?.market.change24hPct ?? null;
-  const rightChange = right.result?.market.change24hPct ?? null;
+  const leftMarket = left.result?.market;
+  const rightMarket = right.result?.market;
 
   const marketFields: ComparisonField[] = [
-    { label: 'Price', left: formatCurrency(left.result?.market.priceUsd ?? null), right: formatCurrency(right.result?.market.priceUsd ?? null) },
-    { label: '24h Change', left: formatPercent(leftChange), right: formatPercent(rightChange) },
-    { label: 'Market Cap', left: formatCompactCurrency(left.result?.market.marketCapUsd ?? null), right: formatCompactCurrency(right.result?.market.marketCapUsd ?? null) },
-    { label: '24h Volume', left: formatCompactCurrency(left.result?.market.volume24hUsd ?? null), right: formatCompactCurrency(right.result?.market.volume24hUsd ?? null) },
-    {
-      label: 'Fully Diluted Valuation',
-      left: formatCompactCurrency(left.result?.market.fullyDilutedValuationUsd ?? null),
-      right: formatCompactCurrency(right.result?.market.fullyDilutedValuationUsd ?? null)
-    }
+    buildNumericField('Price', leftMarket?.priceUsd ?? null, rightMarket?.priceUsd ?? null, formatCurrency),
+    buildNumericField('24h Change', leftMarket?.change24hPct ?? null, rightMarket?.change24hPct ?? null, formatPercent),
+    buildNumericField('Market Cap', leftMarket?.marketCapUsd ?? null, rightMarket?.marketCapUsd ?? null, formatCompactCurrency),
+    buildNumericField('24h Volume', leftMarket?.volume24hUsd ?? null, rightMarket?.volume24hUsd ?? null, formatCompactCurrency),
+    buildNumericField(
+      'Fully Diluted Valuation',
+      leftMarket?.fullyDilutedValuationUsd ?? null,
+      rightMarket?.fullyDilutedValuationUsd ?? null,
+      formatCompactCurrency
+    )
   ];
 
   const projectFields: ComparisonField[] = [
@@ -123,6 +151,15 @@ function buildFields(left: ResearchResponse, right: ResearchResponse) {
   ];
 
   return { marketFields, projectFields, linkFields, freshnessFields };
+}
+
+function getValueClassName(field: ComparisonField, side: 'left' | 'right') {
+  const shouldHighlight = field.highlight === side;
+  return `comparison-cell comparison-value-cell ${shouldHighlight ? 'comparison-value-stronger' : ''}`.trim();
+}
+
+function getValuePrefix(field: ComparisonField, side: 'left' | 'right') {
+  return field.highlight === side ? '✓ ' : '';
 }
 
 function ComparisonSection({
@@ -150,8 +187,14 @@ function ComparisonSection({
         {fields.map((field) => (
           <div key={field.label} className="comparison-table-row">
             <span className="comparison-cell comparison-label-cell">{field.label}</span>
-            <span className="comparison-cell comparison-value-cell">{field.left}</span>
-            <span className="comparison-cell comparison-value-cell">{field.right}</span>
+            <span className={getValueClassName(field, 'left')}>
+              {getValuePrefix(field, 'left')}
+              {field.left}
+            </span>
+            <span className={getValueClassName(field, 'right')}>
+              {getValuePrefix(field, 'right')}
+              {field.right}
+            </span>
           </div>
         ))}
       </div>

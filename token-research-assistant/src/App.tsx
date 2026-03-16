@@ -137,6 +137,15 @@ function App() {
     setCompareUiState(null);
   };
 
+  const handleSwapCompareTokens = () => {
+    setLeftQuery(rightQuery);
+    setRightQuery(leftQuery);
+
+    if (compareError) {
+      setCompareError('');
+    }
+  };
+
   const handleModeChange = (nextMode: 'single' | 'compare') => {
     setMode(nextMode);
   };
@@ -263,6 +272,7 @@ function App() {
               setRightQuery(value);
               if (compareError && value.trim()) setCompareError('');
             }}
+            onSwap={handleSwapCompareTokens}
             onSubmit={() => void handleCompare()}
             onClear={handleClearCompare}
             isLoading={Boolean(isCompareLoading)}
