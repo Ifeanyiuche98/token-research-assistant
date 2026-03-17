@@ -1,4 +1,5 @@
 import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
+import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
@@ -136,6 +137,21 @@ function buildUnknownRisk() {
   };
 }
 
+function buildNeutralSignalInterpretation() {
+  return {
+    summary: 'Signal interpretation is limited because live market data is unavailable for this result.',
+    tone: 'neutral',
+    signals: [
+      {
+        key: 'missing_data',
+        label: 'Incomplete market data',
+        detail: 'Live market fields are unavailable in fallback mode, so only limited interpretation is possible.',
+        tone: 'neutral'
+      }
+    ]
+  };
+}
+
 function ensureRiskOnResponse(response) {
   if (!response?.result) {
     return response;
@@ -154,6 +170,28 @@ function ensureRiskOnResponse(response) {
   );
 
   response.result.risk = hasAnyMarketData ? calculateRiskAnalysis(market) : buildUnknownRisk();
+  return response;
+}
+
+function ensureSignalInterpretationOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.signalInterpretation) {
+    return response;
+  }
+
+  const market = response.result.market;
+  const risk = response.result.risk ?? buildUnknownRisk();
+  const hasAnyMarketData = Boolean(
+    market &&
+      [market.priceUsd, market.marketCapUsd, market.fullyDilutedValuationUsd, market.volume24hUsd, market.change24hPct, market.marketCapRank, market.lastUpdated].some(
+        (value) => value !== null
+      )
+  );
+
+  response.result.signalInterpretation = hasAnyMarketData ? generateSignalInterpretation(market, risk) : buildNeutralSignalInterpretation();
   return response;
 }
 
@@ -195,6 +233,7 @@ function buildFallbackResearchResponse(query, reason = 'not_listed', message = '
         lastUpdated: null
       },
       risk: buildUnknownRisk(),
+      signalInterpretation: buildNeutralSignalInterpretation(),
       project: {
         description: note.summary,
         categories: [],
@@ -294,6 +333,9 @@ function buildLiveResearchResponse(query, coin) {
     lastUpdated: coin?.last_updated ?? null
   };
 
+  const risk = calculateRiskAnalysis(market);
+  const signalInterpretation = generateSignalInterpretation(market, risk);
+
   return {
     status: 'live',
     query,
@@ -307,7 +349,8 @@ function buildLiveResearchResponse(query, coin) {
         confidence: 'high'
       },
       market,
-      risk: calculateRiskAnalysis(market),
+      risk,
+      signalInterpretation,
       project: {
         description: cleanText(coin?.description?.en),
         categories: Array.isArray(coin?.categories) ? coin.categories : [],
@@ -426,7 +469,7 @@ export default async function handler(req, res) {
   try {
     const queryValue = typeof req.query?.q === 'string' ? req.query.q : '';
     const { statusCode, body } = await resolveResearch(queryValue);
-    return json(res, statusCode, body);
+    return json(res, statusCode, ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body)));
   } catch (error) {
     return json(res, 500, {
       status: 'error',

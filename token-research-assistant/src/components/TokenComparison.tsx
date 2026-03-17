@@ -1,5 +1,5 @@
 import type { CompareResponse } from '../types/compare';
-import type { ResearchResponse } from '../types/research';
+import type { ResearchResponse, SignalTone } from '../types/research';
 
 type TokenComparisonProps = {
   comparison: CompareResponse;
@@ -104,6 +104,10 @@ function formatRiskScore(response: ResearchResponse) {
 
 function formatRiskSummary(response: ResearchResponse) {
   return response.result?.risk?.summary ?? '—';
+}
+
+function getSignalToneClass(tone: SignalTone) {
+  return `signal-chip-${tone}`;
 }
 
 function getHigherValueHighlight(leftValue: number | null, rightValue: number | null): HighlightSide {
@@ -235,6 +239,27 @@ function ComparisonSection({
   );
 }
 
+function SignalInterpretationSide({ response }: { response: ResearchResponse }) {
+  const interpretation = response.result?.signalInterpretation;
+
+  if (!interpretation) {
+    return <p className="comparison-side-message">No signal interpretation available.</p>;
+  }
+
+  return (
+    <div className="comparison-signal-side">
+      <p className="comparison-side-message comparison-side-message-tight">{interpretation.summary}</p>
+      <div className="signal-chip-list comparison-signal-chip-list">
+        {interpretation.signals.slice(0, 2).map((signal) => (
+          <span key={`${signal.key}-${signal.detail}`} className={`signal-chip ${getSignalToneClass(signal.tone)}`} title={signal.detail}>
+            {signal.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function TokenComparison({ comparison }: TokenComparisonProps) {
   const { left, right } = comparison;
   const { marketFields, projectFields, linkFields, freshnessFields, riskFields } = buildFields(left, right);
@@ -270,6 +295,22 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
 
       <ComparisonSection title="Core market snapshot" left={left} right={right} fields={marketFields} />
       <ComparisonSection title="Market risk comparison" left={left} right={right} fields={riskFields} />
+      <section className="comparison-section">
+        <div className="note-panel-header">
+          <p className="state-kicker">Signal interpretation comparison</p>
+        </div>
+        <div className="comparison-identity-grid">
+          {[left, right].map((response, index) => (
+            <article key={`${response.query.raw}-signal-${index}`} className="comparison-token-card">
+              <div className="comparison-token-top">
+                <h3>{getDisplayName(response)}</h3>
+                <span className={`result-status-badge ${getSourceClass(response)}`}>{getSourceLabel(response)}</span>
+              </div>
+              <SignalInterpretationSide response={response} />
+            </article>
+          ))}
+        </div>
+      </section>
       <ComparisonSection title="Project basics" left={left} right={right} fields={projectFields} />
       <ComparisonSection title="Official links" left={left} right={right} fields={linkFields} />
       <ComparisonSection title="Last updated" left={left} right={right} fields={freshnessFields} />

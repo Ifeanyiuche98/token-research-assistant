@@ -1,5 +1,6 @@
 import researchHandler from './research.js';
 import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
+import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -35,6 +36,21 @@ function buildUnknownRisk() {
   };
 }
 
+function buildNeutralSignalInterpretation() {
+  return {
+    summary: 'Signal interpretation is limited because live market data is unavailable for this result.',
+    tone: 'neutral',
+    signals: [
+      {
+        key: 'missing_data',
+        label: 'Incomplete market data',
+        detail: 'Live market fields are unavailable in fallback mode, so only limited interpretation is possible.',
+        tone: 'neutral'
+      }
+    ]
+  };
+}
+
 function ensureRiskOnResponse(response) {
   if (!response?.result) {
     return response;
@@ -53,6 +69,28 @@ function ensureRiskOnResponse(response) {
   );
 
   response.result.risk = hasAnyMarketData ? calculateRiskAnalysis(market) : buildUnknownRisk();
+  return response;
+}
+
+function ensureSignalInterpretationOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.signalInterpretation) {
+    return response;
+  }
+
+  const market = response.result.market;
+  const risk = response.result.risk ?? buildUnknownRisk();
+  const hasAnyMarketData = Boolean(
+    market &&
+      [market.priceUsd, market.marketCapUsd, market.fullyDilutedValuationUsd, market.volume24hUsd, market.change24hPct, market.marketCapRank, market.lastUpdated].some(
+        (value) => value !== null
+      )
+  );
+
+  response.result.signalInterpretation = hasAnyMarketData ? generateSignalInterpretation(market, risk) : buildNeutralSignalInterpretation();
   return response;
 }
 
@@ -106,8 +144,8 @@ export default async function handler(req, res) {
     const [left, right] = await Promise.all([invokeResearch(leftQuery), invokeResearch(rightQuery)]);
 
     return json(res, 200, {
-      left: ensureRiskOnResponse(left.body),
-      right: ensureRiskOnResponse(right.body),
+      left: ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body)),
+      right: ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body)),
       meta: {
         generatedAt: new Date().toISOString()
       }

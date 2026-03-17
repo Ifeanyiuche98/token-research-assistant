@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ResearchNote as ResearchNoteType, ResearchResponse, RiskAnalysis } from '../types/research';
+import type { ResearchNote as ResearchNoteType, ResearchResponse, RiskAnalysis, SignalTone } from '../types/research';
 
 type ResearchNoteProps = {
   note: ResearchNoteType;
@@ -90,11 +90,16 @@ function formatRiskLevel(level: RiskAnalysis['level']) {
   return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
+function getSignalToneClass(tone: SignalTone) {
+  return `signal-chip-${tone}`;
+}
+
 export function ResearchNote({ note, response }: ResearchNoteProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const marketItems = buildMarketItems(response);
   const linkItems = buildLinkItems(response);
   const risk = response?.result?.risk ?? null;
+  const signalInterpretation = response?.result?.signalInterpretation ?? null;
   const liveResult = response?.status === 'live';
   const logoUrl = response?.result?.media.smallUrl ?? response?.result?.media.thumbUrl ?? null;
   const categories = response?.result?.project.categories ?? [];
@@ -205,6 +210,34 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
             </ul>
           ) : null}
           <p className="risk-footnote">Market risk only — not investment advice or a full project audit.</p>
+        </section>
+      ) : null}
+
+      {signalInterpretation ? (
+        <section className="note-data-panel note-data-panel-signal">
+          <div className="note-panel-header">
+            <p className="state-kicker">Signal interpretation</p>
+          </div>
+          <p className="risk-summary-text">{signalInterpretation.summary}</p>
+          {signalInterpretation.signals.length > 0 ? (
+            <div className="signal-chip-list">
+              {signalInterpretation.signals.slice(0, 4).map((signal) => (
+                <span key={`${signal.key}-${signal.detail}`} className={`signal-chip ${getSignalToneClass(signal.tone)}`} title={signal.detail}>
+                  {signal.label}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          {signalInterpretation.signals.length > 0 ? (
+            <ul className="risk-signal-list signal-detail-list">
+              {signalInterpretation.signals.slice(0, 4).map((signal) => (
+                <li key={`${signal.key}-${signal.detail}`}>
+                  <strong>{signal.label}:</strong> {signal.detail}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="risk-footnote">Market interpretation only — not financial advice or a prediction.</p>
         </section>
       ) : null}
 

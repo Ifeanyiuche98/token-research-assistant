@@ -1,5 +1,5 @@
 import { getResearchNote } from '../../data/mockResearch';
-import type { ResearchResponse, ResearchResult } from '../../types/research';
+import type { ResearchResponse, ResearchResult, SignalInterpretation } from '../../types/research';
 
 function slugify(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, '-');
@@ -7,6 +7,18 @@ function slugify(value: string): string {
 
 export function getFallbackResearchResponse(query: { raw: string; normalized: string }): ResearchResponse {
   const note = getResearchNote(query.raw);
+  const signalInterpretation: SignalInterpretation = {
+    summary: 'Signal interpretation is limited because live market data is unavailable for this result.',
+    tone: 'neutral',
+    signals: [
+      {
+        key: 'missing_data',
+        label: 'Incomplete market data',
+        detail: 'Live market fields are unavailable in fallback mode, so only limited interpretation is possible.',
+        tone: 'neutral'
+      }
+    ]
+  };
 
   const result: ResearchResult = {
     identity: {
@@ -39,6 +51,7 @@ export function getFallbackResearchResponse(query: { raw: string; normalized: st
         }
       ]
     },
+    signalInterpretation,
     project: {
       description: note.summary,
       categories: [],
