@@ -38,6 +38,7 @@ export interface ResearchBrief {
     headline: string;
     body: string;
 }
+export type Sector = 'Layer 1' | 'DeFi' | 'NFT / Gaming' | 'AI' | 'Infrastructure' | 'Meme' | 'Stablecoin' | 'Exchange' | 'Unknown';
 export type ResearchResult = {
     identity: {
         id: string | null;
@@ -59,6 +60,7 @@ export type ResearchResult = {
     risk: RiskAnalysis | null;
     signalInterpretation: SignalInterpretation | null;
     researchBrief: ResearchBrief | null;
+    sector: Sector | null;
     project: {
         description: string | null;
         categories: string[];

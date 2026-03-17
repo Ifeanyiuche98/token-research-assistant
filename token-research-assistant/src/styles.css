@@ -429,6 +429,10 @@ h2 {
   background: rgba(15, 23, 42, 0.24);
 }
 
+.note-data-panel-sector {
+  background: rgba(37, 99, 235, 0.08);
+}
+
 .note-panel-header {
   margin-bottom: 12px;
 }
@@ -495,6 +499,18 @@ h2 {
 .research-brief-body {
   margin: 0;
   color: #e2e8f0;
+}
+
+.sector-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.14);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  color: #dbeafe;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .risk-summary-row {
@@ -768,6 +784,11 @@ h2 {
 
 .comparison-signal-chip-list {
   margin: 0;
+}
+
+.comparison-sector-copy {
+  margin: 14px 0 0;
+  color: #cbd5e1;
 }
 
 .comparison-table {

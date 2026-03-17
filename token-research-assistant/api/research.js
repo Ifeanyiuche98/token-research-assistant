@@ -1,6 +1,7 @@
 import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
 import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
+import { mapToSector } from '../src/utils/mapToSector.js';
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
@@ -232,6 +233,23 @@ function ensureResearchBriefOnResponse(response) {
   return response;
 }
 
+function ensureSectorOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.sector) {
+    return response;
+  }
+
+  response.result.sector = mapToSector(
+    response.result.project?.categories ?? [],
+    response.result.identity?.name ?? response.query?.raw ?? null,
+    response.result.project?.description ?? null
+  );
+  return response;
+}
+
 function buildFallbackResearchResponse(query, reason = 'not_listed', message = 'Live data unavailable. Showing local fallback research.') {
   const profile = findProfile(query.raw);
   const note =
@@ -272,6 +290,7 @@ function buildFallbackResearchResponse(query, reason = 'not_listed', message = '
       risk: buildUnknownRisk(),
       signalInterpretation: buildNeutralSignalInterpretation(),
       researchBrief: buildFallbackResearchBrief(),
+      sector: mapToSector([], note.project, note.summary),
       project: {
         description: note.summary,
         categories: [],
@@ -388,6 +407,7 @@ function buildLiveResearchResponse(query, coin) {
     description: project.description,
     categories: project.categories
   });
+  const sector = mapToSector(project.categories, coin?.name ?? query.raw, project.description);
 
   return {
     status: 'live',
@@ -405,6 +425,7 @@ function buildLiveResearchResponse(query, coin) {
       risk,
       signalInterpretation,
       researchBrief,
+      sector,
       project,
       media: {
         thumbUrl: coin?.image?.thumb ?? null,
@@ -514,7 +535,7 @@ export default async function handler(req, res) {
   try {
     const queryValue = typeof req.query?.q === 'string' ? req.query.q : '';
     const { statusCode, body } = await resolveResearch(queryValue);
-    return json(res, statusCode, ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body))));
+    return json(res, statusCode, ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body)))));
   } catch (error) {
     return json(res, 500, {
       status: 'error',

@@ -2,6 +2,7 @@ import researchHandler from './research.js';
 import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
 import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
+import { mapToSector } from '../src/utils/mapToSector.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -131,6 +132,23 @@ function ensureResearchBriefOnResponse(response) {
   return response;
 }
 
+function ensureSectorOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.sector) {
+    return response;
+  }
+
+  response.result.sector = mapToSector(
+    response.result.project?.categories ?? [],
+    response.result.identity?.name ?? response.query?.raw ?? null,
+    response.result.project?.description ?? null
+  );
+  return response;
+}
+
 async function invokeResearch(query) {
   const result = {
     statusCode: 500,
@@ -181,8 +199,8 @@ export default async function handler(req, res) {
     const [left, right] = await Promise.all([invokeResearch(leftQuery), invokeResearch(rightQuery)]);
 
     return json(res, 200, {
-      left: ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body))),
-      right: ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body))),
+      left: ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body)))),
+      right: ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body)))),
       meta: {
         generatedAt: new Date().toISOString()
       }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ResearchNote as ResearchNoteType, ResearchResponse, RiskAnalysis, SignalTone } from '../types/research';
+import type { ResearchNote as ResearchNoteType, ResearchResponse, RiskAnalysis, Sector, SignalTone } from '../types/research';
 
 type ResearchNoteProps = {
   note: ResearchNoteType;
@@ -94,6 +94,29 @@ function getSignalToneClass(tone: SignalTone) {
   return `signal-chip-${tone}`;
 }
 
+function getSectorExplanation(sector: Sector) {
+  switch (sector) {
+    case 'Layer 1':
+      return 'This asset belongs to the Layer 1 sector, which includes foundational blockchain networks.';
+    case 'DeFi':
+      return 'This asset belongs to the DeFi sector, which focuses on decentralized financial services.';
+    case 'NFT / Gaming':
+      return 'This asset belongs to the NFT / Gaming sector, which often combines digital collectibles, games, or metaverse experiences.';
+    case 'AI':
+      return 'This asset belongs to the AI sector, which usually connects crypto networks with artificial intelligence themes or tools.';
+    case 'Infrastructure':
+      return 'This asset belongs to the Infrastructure sector, which supports data, interoperability, or core blockchain services.';
+    case 'Meme':
+      return 'This asset belongs to the Meme sector, which is often driven more by community attention and sentiment.';
+    case 'Stablecoin':
+      return 'This asset belongs to the Stablecoin sector, which aims to track a more stable reference value.';
+    case 'Exchange':
+      return 'This asset belongs to the Exchange sector, which is tied to trading venues or exchange-related activity.';
+    default:
+      return 'Sector classification is limited because category information is incomplete.';
+  }
+}
+
 export function ResearchNote({ note, response }: ResearchNoteProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const marketItems = buildMarketItems(response);
@@ -101,6 +124,7 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
   const risk = response?.result?.risk ?? null;
   const signalInterpretation = response?.result?.signalInterpretation ?? null;
   const researchBrief = response?.result?.researchBrief ?? null;
+  const sector = response?.result?.sector ?? 'Unknown';
   const liveResult = response?.status === 'live';
   const logoUrl = response?.result?.media.smallUrl ?? response?.result?.media.thumbUrl ?? null;
   const categories = response?.result?.project.categories ?? [];
@@ -182,6 +206,14 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
           <p className="research-brief-body">{researchBrief.body}</p>
         </section>
       ) : null}
+
+      <section className="note-data-panel note-data-panel-sector">
+        <div className="note-panel-header note-panel-header-inline">
+          <p className="state-kicker">Sector context</p>
+          <span className="sector-badge">{sector}</span>
+        </div>
+        <p className="research-brief-body">{getSectorExplanation(sector)}</p>
+      </section>
 
       {marketItems.length > 0 ? (
         <section className="note-data-panel">
