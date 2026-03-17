@@ -1,6 +1,7 @@
 import { calculateRiskAnalysis } from '../../utils/calculateRiskAnalysis';
 import { generateSignalInterpretation } from '../../utils/generateSignalInterpretation';
 import { generateResearchBrief } from '../../utils/generateResearchBrief';
+import { mapToSector } from '../../utils/mapToSector';
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 function cleanText(value) {
     if (!value)
@@ -82,6 +83,7 @@ function buildLiveResponse(query, coin) {
         description: project.description,
         categories: project.categories
     });
+    const sector = mapToSector(project.categories, coin.name ?? query.raw, project.description);
     const result = {
         identity: {
             id: coin.id ?? null,
@@ -95,6 +97,7 @@ function buildLiveResponse(query, coin) {
         risk,
         signalInterpretation,
         researchBrief,
+        sector,
         project,
         media: {
             thumbUrl: coin.image?.thumb ?? null,

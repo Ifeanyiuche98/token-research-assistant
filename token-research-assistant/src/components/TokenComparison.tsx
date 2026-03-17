@@ -119,6 +119,16 @@ function getResearchBrief(response: ResearchResponse) {
   );
 }
 
+function getSector(response: ResearchResponse) {
+  return response.result?.sector ?? 'Unknown';
+}
+
+function getSectorComparisonCopy(left: ResearchResponse, right: ResearchResponse) {
+  return getSector(left) === getSector(right)
+    ? 'Both assets belong to the same sector and are more directly comparable.'
+    : 'These assets belong to different sectors and may serve different roles in the ecosystem.';
+}
+
 function getHigherValueHighlight(leftValue: number | null, rightValue: number | null): HighlightSide {
   if (leftValue === null || rightValue === null) {
     return null;
@@ -328,6 +338,22 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
             </article>
           ))}
         </div>
+      </section>
+      <section className="comparison-section">
+        <div className="note-panel-header">
+          <p className="state-kicker">Sector comparison</p>
+        </div>
+        <div className="comparison-identity-grid">
+          {[left, right].map((response, index) => (
+            <article key={`${response.query.raw}-sector-${index}`} className="comparison-token-card">
+              <div className="comparison-token-top">
+                <h3>{getDisplayName(response)}</h3>
+                <span className="sector-badge">{getSector(response)}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <p className="comparison-sector-copy">{getSectorComparisonCopy(left, right)}</p>
       </section>
       <ComparisonSection title="Core market snapshot" left={left} right={right} fields={marketFields} />
       <ComparisonSection title="Market risk comparison" left={left} right={right} fields={riskFields} />
