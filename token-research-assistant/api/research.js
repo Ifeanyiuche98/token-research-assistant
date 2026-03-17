@@ -1,3 +1,5 @@
+import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
+
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
@@ -118,6 +120,43 @@ function findProfile(query) {
   );
 }
 
+function buildUnknownRisk() {
+  return {
+    level: 'unknown',
+    score: null,
+    summary: 'Market risk is unavailable because live market data could not be loaded for this result.',
+    signals: [
+      {
+        key: 'missing_market_data',
+        label: 'Live market data',
+        value: 'Unavailable in fallback mode',
+        impact: 'medium'
+      }
+    ]
+  };
+}
+
+function ensureRiskOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.risk) {
+    return response;
+  }
+
+  const market = response.result.market;
+  const hasAnyMarketData = Boolean(
+    market &&
+      [market.priceUsd, market.marketCapUsd, market.fullyDilutedValuationUsd, market.volume24hUsd, market.change24hPct, market.marketCapRank, market.lastUpdated].some(
+        (value) => value !== null
+      )
+  );
+
+  response.result.risk = hasAnyMarketData ? calculateRiskAnalysis(market) : buildUnknownRisk();
+  return response;
+}
+
 function buildFallbackResearchResponse(query, reason = 'not_listed', message = 'Live data unavailable. Showing local fallback research.') {
   const profile = findProfile(query.raw);
   const note =
@@ -155,6 +194,7 @@ function buildFallbackResearchResponse(query, reason = 'not_listed', message = '
         marketCapRank: null,
         lastUpdated: null
       },
+      risk: buildUnknownRisk(),
       project: {
         description: note.summary,
         categories: [],
@@ -244,6 +284,15 @@ function buildLiveResearchResponse(query, coin) {
   const subreddit = coin?.links?.subreddit_url ? cleanUrlList([coin.links.subreddit_url]) : [];
   const twitter = buildSocialUrl('https://twitter.com/', coin?.links?.twitter_screen_name);
   const telegram = buildSocialUrl('https://t.me/', coin?.links?.telegram_channel_identifier);
+  const market = {
+    priceUsd: coin?.market_data?.current_price?.usd ?? null,
+    marketCapUsd: coin?.market_data?.market_cap?.usd ?? null,
+    fullyDilutedValuationUsd: coin?.market_data?.fully_diluted_valuation?.usd ?? null,
+    volume24hUsd: coin?.market_data?.total_volume?.usd ?? null,
+    change24hPct: coin?.market_data?.price_change_percentage_24h ?? null,
+    marketCapRank: coin?.market_cap_rank ?? null,
+    lastUpdated: coin?.last_updated ?? null
+  };
 
   return {
     status: 'live',
@@ -257,15 +306,8 @@ function buildLiveResearchResponse(query, coin) {
         source: 'coingecko',
         confidence: 'high'
       },
-      market: {
-        priceUsd: coin?.market_data?.current_price?.usd ?? null,
-        marketCapUsd: coin?.market_data?.market_cap?.usd ?? null,
-        fullyDilutedValuationUsd: coin?.market_data?.fully_diluted_valuation?.usd ?? null,
-        volume24hUsd: coin?.market_data?.total_volume?.usd ?? null,
-        change24hPct: coin?.market_data?.price_change_percentage_24h ?? null,
-        marketCapRank: coin?.market_cap_rank ?? null,
-        lastUpdated: coin?.last_updated ?? null
-      },
+      market,
+      risk: calculateRiskAnalysis(market),
       project: {
         description: cleanText(coin?.description?.en),
         categories: Array.isArray(coin?.categories) ? coin.categories : [],
