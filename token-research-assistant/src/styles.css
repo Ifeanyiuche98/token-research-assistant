@@ -421,6 +421,10 @@ h2 {
   background: rgba(59, 130, 246, 0.08);
 }
 
+.note-data-panel-signal {
+  background: rgba(30, 41, 59, 0.24);
+}
+
 .note-panel-header {
   margin-bottom: 12px;
 }
@@ -503,6 +507,53 @@ h2 {
   margin: 12px 0 0;
   color: #94a3b8;
   font-size: 0.88rem;
+}
+
+.signal-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.signal-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(30, 41, 59, 0.4);
+  color: #e2e8f0;
+  font-size: 0.84rem;
+  line-height: 1.2;
+}
+
+.signal-chip-positive {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(134, 239, 172, 0.22);
+  color: #bbf7d0;
+}
+
+.signal-chip-caution {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(251, 191, 36, 0.22);
+  color: #fde68a;
+}
+
+.signal-chip-negative {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(248, 113, 113, 0.22);
+  color: #fecaca;
+}
+
+.signal-chip-neutral {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+
+.signal-detail-list {
+  margin-top: 0;
 }
 
 .link-grid {
@@ -685,6 +736,19 @@ h2 {
 .comparison-side-message {
   margin: 12px 0 0;
   color: #cbd5e1;
+}
+
+.comparison-side-message-tight {
+  margin-top: 0;
+}
+
+.comparison-signal-side {
+  display: grid;
+  gap: 8px;
+}
+
+.comparison-signal-chip-list {
+  margin: 0;
 }
 
 .comparison-table {

@@ -1,5 +1,6 @@
 import type { ResearchResponse, ResearchResult } from '../../types/research';
 import { calculateRiskAnalysis } from '../../utils/calculateRiskAnalysis';
+import { generateSignalInterpretation } from '../../utils/generateSignalInterpretation';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
@@ -120,6 +121,9 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
     lastUpdated: coin.last_updated ?? null
   };
 
+  const risk = calculateRiskAnalysis(market);
+  const signalInterpretation = generateSignalInterpretation(market, risk);
+
   const result: ResearchResult = {
     identity: {
       id: coin.id ?? null,
@@ -130,7 +134,8 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
       confidence: 'high'
     },
     market,
-    risk: calculateRiskAnalysis(market),
+    risk,
+    signalInterpretation,
     project: {
       description: cleanText(coin.description?.en),
       categories: coin.categories ?? [],

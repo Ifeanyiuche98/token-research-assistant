@@ -22,6 +22,18 @@ export type RiskAnalysis = {
     summary: string;
     signals: RiskSignal[];
 };
+export type SignalTone = 'positive' | 'caution' | 'negative' | 'neutral';
+export type InterpretedSignal = {
+    key: 'liquidity' | 'volatility' | 'market_cap' | 'fdv_gap' | 'rank' | 'missing_data';
+    label: string;
+    detail: string;
+    tone: SignalTone;
+};
+export type SignalInterpretation = {
+    summary: string;
+    tone: SignalTone;
+    signals: InterpretedSignal[];
+};
 export type ResearchResult = {
     identity: {
         id: string | null;
@@ -41,6 +53,7 @@ export type ResearchResult = {
         lastUpdated: string | null;
     };
     risk: RiskAnalysis | null;
+    signalInterpretation: SignalInterpretation | null;
     project: {
         description: string | null;
         categories: string[];

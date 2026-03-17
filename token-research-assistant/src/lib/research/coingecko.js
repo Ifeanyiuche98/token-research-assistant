@@ -1,4 +1,5 @@
 import { calculateRiskAnalysis } from '../../utils/calculateRiskAnalysis';
+import { generateSignalInterpretation } from '../../utils/generateSignalInterpretation';
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 function cleanText(value) {
     if (!value)
@@ -63,6 +64,8 @@ function buildLiveResponse(query, coin) {
         marketCapRank: coin.market_cap_rank ?? null,
         lastUpdated: coin.last_updated ?? null
     };
+    const risk = calculateRiskAnalysis(market);
+    const signalInterpretation = generateSignalInterpretation(market, risk);
     const result = {
         identity: {
             id: coin.id ?? null,
@@ -73,7 +76,8 @@ function buildLiveResponse(query, coin) {
             confidence: 'high'
         },
         market,
-        risk: calculateRiskAnalysis(market),
+        risk,
+        signalInterpretation,
         project: {
             description: cleanText(coin.description?.en),
             categories: coin.categories ?? [],

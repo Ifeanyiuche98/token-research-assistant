@@ -4,6 +4,18 @@ function slugify(value) {
 }
 export function getFallbackResearchResponse(query) {
     const note = getResearchNote(query.raw);
+    const signalInterpretation = {
+        summary: 'Signal interpretation is limited because live market data is unavailable for this result.',
+        tone: 'neutral',
+        signals: [
+            {
+                key: 'missing_data',
+                label: 'Incomplete market data',
+                detail: 'Live market fields are unavailable in fallback mode, so only limited interpretation is possible.',
+                tone: 'neutral'
+            }
+        ]
+    };
     const result = {
         identity: {
             id: `local-${slugify(note.project)}`,
@@ -35,6 +47,7 @@ export function getFallbackResearchResponse(query) {
                 }
             ]
         },
+        signalInterpretation,
         project: {
             description: note.summary,
             categories: [],
