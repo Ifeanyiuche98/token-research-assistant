@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TokenForm } from './components/TokenForm';
 import { ResearchNote } from './components/ResearchNote';
 import { LoadingState } from './components/LoadingState';
@@ -14,6 +14,8 @@ import { mapResearchResponseToNote } from './utils/mapResearchResponseToNote';
 
 const quickSamples = ['Bitcoin', 'Ethereum', 'Solana', 'Chainlink', 'Uniswap'];
 
+type ThemeMode = 'dark' | 'light';
+
 function App() {
   const [mode, setMode] = useState<'single' | 'compare'>('single');
   const [query, setQuery] = useState('');
@@ -25,6 +27,11 @@ function App() {
   const [compareResult, setCompareResult] = useState<CompareResponse | null>(null);
   const [compareUiState, setCompareUiState] = useState<CompareUiState | null>(null);
   const [compareError, setCompareError] = useState('');
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    const stored = window.localStorage.getItem('theme');
+    return stored === 'light' ? 'light' : 'dark';
+  });
 
   const handleChange = (value: string) => {
     setQuery(value);
@@ -150,6 +157,16 @@ function App() {
     setMode(nextMode);
   };
 
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    window.localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  };
+
   const hasActiveState = Boolean(query.trim() || note || error || uiState);
   const isLoading = uiState?.type === 'loading';
   const isNotFound = uiState?.type === 'not_found';
@@ -161,8 +178,12 @@ function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">Phase 7B</p>
-        <h1>Token Research Assistant</h1>
+        <div className="hero-top">
+          <h1>Token Research Assistant</h1>
+          <button type="button" className="secondary-button theme-toggle-button" onClick={toggleTheme}>
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+        </div>
         <p className="subtitle">
           Enter a token or project name and get a short research note with live CoinGecko data when available and local fallback support when it is not.
         </p>
