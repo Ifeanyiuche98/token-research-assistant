@@ -1,6 +1,7 @@
 import type { ResearchResponse, ResearchResult } from '../../types/research';
 import { calculateRiskAnalysis } from '../../utils/calculateRiskAnalysis';
 import { generateSignalInterpretation } from '../../utils/generateSignalInterpretation';
+import { generateResearchBrief } from '../../utils/generateResearchBrief';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
@@ -123,6 +124,21 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
 
   const risk = calculateRiskAnalysis(market);
   const signalInterpretation = generateSignalInterpretation(market, risk);
+  const project = {
+    description: cleanText(coin.description?.en),
+    categories: coin.categories ?? [],
+    homepageUrl: homepage[0] ?? null,
+    blockchainSiteUrls: blockchainSite,
+    officialTwitterHandle: coin.links?.twitter_screen_name?.trim() || null,
+    officialTelegramHandle: coin.links?.telegram_channel_identifier?.trim() || null,
+    sentimentVotesUpPct: coin.sentiment_votes_up_percentage ?? null,
+    sentimentVotesDownPct: coin.sentiment_votes_down_percentage ?? null
+  };
+  const researchBrief = generateResearchBrief(market, risk, signalInterpretation, {
+    name: coin.name ?? query.raw,
+    description: project.description,
+    categories: project.categories
+  });
 
   const result: ResearchResult = {
     identity: {
@@ -136,16 +152,8 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
     market,
     risk,
     signalInterpretation,
-    project: {
-      description: cleanText(coin.description?.en),
-      categories: coin.categories ?? [],
-      homepageUrl: homepage[0] ?? null,
-      blockchainSiteUrls: blockchainSite,
-      officialTwitterHandle: coin.links?.twitter_screen_name?.trim() || null,
-      officialTelegramHandle: coin.links?.telegram_channel_identifier?.trim() || null,
-      sentimentVotesUpPct: coin.sentiment_votes_up_percentage ?? null,
-      sentimentVotesDownPct: coin.sentiment_votes_down_percentage ?? null
-    },
+    researchBrief,
+    project,
     media: {
       thumbUrl: coin.image?.thumb ?? null,
       smallUrl: coin.image?.small ?? null,

@@ -42,6 +42,11 @@ export type SignalInterpretation = {
   signals: InterpretedSignal[];
 };
 
+export interface ResearchBrief {
+  headline: string;
+  body: string;
+}
+
 export type ResearchResult = {
   identity: {
     id: string | null;
@@ -62,6 +67,7 @@ export type ResearchResult = {
   };
   risk: RiskAnalysis | null;
   signalInterpretation: SignalInterpretation | null;
+  researchBrief: ResearchBrief | null;
   project: {
     description: string | null;
     categories: string[];

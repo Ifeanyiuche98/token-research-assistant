@@ -1,6 +1,7 @@
 import researchHandler from './research.js';
 import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
+import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -51,6 +52,13 @@ function buildNeutralSignalInterpretation() {
   };
 }
 
+function buildFallbackResearchBrief() {
+  return {
+    headline: 'Limited research summary',
+    body: 'A full research brief is limited because live market data is unavailable. This result is based on fallback data.'
+  };
+}
+
 function ensureRiskOnResponse(response) {
   if (!response?.result) {
     return response;
@@ -91,6 +99,35 @@ function ensureSignalInterpretationOnResponse(response) {
   );
 
   response.result.signalInterpretation = hasAnyMarketData ? generateSignalInterpretation(market, risk) : buildNeutralSignalInterpretation();
+  return response;
+}
+
+function ensureResearchBriefOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.researchBrief) {
+    return response;
+  }
+
+  const market = response.result.market;
+  const risk = response.result.risk ?? buildUnknownRisk();
+  const signalInterpretation = response.result.signalInterpretation ?? buildNeutralSignalInterpretation();
+  const hasAnyMarketData = Boolean(
+    market &&
+      [market.priceUsd, market.marketCapUsd, market.fullyDilutedValuationUsd, market.volume24hUsd, market.change24hPct, market.marketCapRank, market.lastUpdated].some(
+        (value) => value !== null
+      )
+  );
+
+  response.result.researchBrief = hasAnyMarketData
+    ? generateResearchBrief(market, risk, signalInterpretation, {
+        name: response.result.identity?.name ?? response.query?.raw ?? 'This asset',
+        description: response.result.project?.description ?? null,
+        categories: response.result.project?.categories ?? []
+      })
+    : buildFallbackResearchBrief();
   return response;
 }
 
@@ -144,8 +181,8 @@ export default async function handler(req, res) {
     const [left, right] = await Promise.all([invokeResearch(leftQuery), invokeResearch(rightQuery)]);
 
     return json(res, 200, {
-      left: ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body)),
-      right: ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body)),
+      left: ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body))),
+      right: ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body))),
       meta: {
         generatedAt: new Date().toISOString()
       }
