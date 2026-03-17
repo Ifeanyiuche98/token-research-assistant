@@ -1,4 +1,5 @@
 import researchHandler from './research.js';
+import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -16,6 +17,43 @@ function getQueryValue(value) {
   }
 
   return '';
+}
+
+function buildUnknownRisk() {
+  return {
+    level: 'unknown',
+    score: null,
+    summary: 'Market risk is unavailable because live market data could not be loaded for this result.',
+    signals: [
+      {
+        key: 'missing_market_data',
+        label: 'Live market data',
+        value: 'Unavailable in fallback mode',
+        impact: 'medium'
+      }
+    ]
+  };
+}
+
+function ensureRiskOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.risk) {
+    return response;
+  }
+
+  const market = response.result.market;
+  const hasAnyMarketData = Boolean(
+    market &&
+      [market.priceUsd, market.marketCapUsd, market.fullyDilutedValuationUsd, market.volume24hUsd, market.change24hPct, market.marketCapRank, market.lastUpdated].some(
+        (value) => value !== null
+      )
+  );
+
+  response.result.risk = hasAnyMarketData ? calculateRiskAnalysis(market) : buildUnknownRisk();
+  return response;
 }
 
 async function invokeResearch(query) {
@@ -68,8 +106,8 @@ export default async function handler(req, res) {
     const [left, right] = await Promise.all([invokeResearch(leftQuery), invokeResearch(rightQuery)]);
 
     return json(res, 200, {
-      left: left.body,
-      right: right.body,
+      left: ensureRiskOnResponse(left.body),
+      right: ensureRiskOnResponse(right.body),
       meta: {
         generatedAt: new Date().toISOString()
       }
