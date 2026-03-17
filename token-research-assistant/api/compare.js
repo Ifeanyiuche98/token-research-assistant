@@ -3,6 +3,7 @@ import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
 import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
 import { mapToSector } from '../src/utils/mapToSector.js';
+import { getSectorIntelligence } from '../src/utils/getSectorIntelligence.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -149,6 +150,20 @@ function ensureSectorOnResponse(response) {
   return response;
 }
 
+function ensureSectorIntelligenceOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.sectorIntelligence) {
+    return response;
+  }
+
+  const sector = response.result.sector ?? 'Unknown';
+  response.result.sectorIntelligence = getSectorIntelligence(sector);
+  return response;
+}
+
 async function invokeResearch(query) {
   const result = {
     statusCode: 500,
@@ -199,8 +214,8 @@ export default async function handler(req, res) {
     const [left, right] = await Promise.all([invokeResearch(leftQuery), invokeResearch(rightQuery)]);
 
     return json(res, 200, {
-      left: ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body)))),
-      right: ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body)))),
+      left: ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body))))),
+      right: ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body))))),
       meta: {
         generatedAt: new Date().toISOString()
       }

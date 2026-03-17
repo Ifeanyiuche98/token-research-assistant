@@ -1,5 +1,6 @@
 import { getResearchNote } from '../../data/mockResearch';
 import { mapToSector } from '../../utils/mapToSector';
+import { getSectorIntelligence } from '../../utils/getSectorIntelligence';
 function slugify(value) {
     return value.trim().toLowerCase().replace(/\s+/g, '-');
 }
@@ -22,6 +23,7 @@ export function getFallbackResearchResponse(query) {
         body: 'A full research brief is limited because live market data is unavailable. This result is based on fallback data.'
     };
     const sector = mapToSector([], note.project, note.summary);
+    const sectorIntelligence = getSectorIntelligence(sector);
     const result = {
         identity: {
             id: `local-${slugify(note.project)}`,
@@ -56,6 +58,7 @@ export function getFallbackResearchResponse(query) {
         signalInterpretation,
         researchBrief,
         sector,
+        sectorIntelligence,
         project: {
             description: note.summary,
             categories: [],

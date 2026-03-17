@@ -433,6 +433,10 @@ h2 {
   background: rgba(37, 99, 235, 0.08);
 }
 
+.note-data-panel-sector-intelligence {
+  background: rgba(14, 116, 144, 0.08);
+}
+
 .note-panel-header {
   margin-bottom: 12px;
 }
@@ -789,6 +793,10 @@ h2 {
 .comparison-sector-copy {
   margin: 14px 0 0;
   color: #cbd5e1;
+}
+
+.sector-watchout-list {
+  margin-top: 12px;
 }
 
 .comparison-table {

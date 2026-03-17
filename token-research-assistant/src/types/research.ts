@@ -47,6 +47,11 @@ export interface ResearchBrief {
   body: string;
 }
 
+export interface SectorIntelligence {
+  profile: string;
+  watchouts: string[];
+}
+
 export type Sector = 'Layer 1' | 'DeFi' | 'NFT / Gaming' | 'AI' | 'Infrastructure' | 'Meme' | 'Stablecoin' | 'Exchange' | 'Unknown';
 
 export type ResearchResult = {
@@ -71,6 +76,7 @@ export type ResearchResult = {
   signalInterpretation: SignalInterpretation | null;
   researchBrief: ResearchBrief | null;
   sector: Sector | null;
+  sectorIntelligence: SectorIntelligence | null;
   project: {
     description: string | null;
     categories: string[];
