@@ -2,6 +2,7 @@ import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
 import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
 import { mapToSector } from '../src/utils/mapToSector.js';
+import { getSectorIntelligence } from '../src/utils/getSectorIntelligence.js';
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
@@ -250,6 +251,20 @@ function ensureSectorOnResponse(response) {
   return response;
 }
 
+function ensureSectorIntelligenceOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.sectorIntelligence) {
+    return response;
+  }
+
+  const sector = response.result.sector ?? 'Unknown';
+  response.result.sectorIntelligence = getSectorIntelligence(sector);
+  return response;
+}
+
 function buildFallbackResearchResponse(query, reason = 'not_listed', message = 'Live data unavailable. Showing local fallback research.') {
   const profile = findProfile(query.raw);
   const note =
@@ -291,6 +306,7 @@ function buildFallbackResearchResponse(query, reason = 'not_listed', message = '
       signalInterpretation: buildNeutralSignalInterpretation(),
       researchBrief: buildFallbackResearchBrief(),
       sector: mapToSector([], note.project, note.summary),
+      sectorIntelligence: getSectorIntelligence(mapToSector([], note.project, note.summary)),
       project: {
         description: note.summary,
         categories: [],
@@ -408,6 +424,7 @@ function buildLiveResearchResponse(query, coin) {
     categories: project.categories
   });
   const sector = mapToSector(project.categories, coin?.name ?? query.raw, project.description);
+  const sectorIntelligence = getSectorIntelligence(sector);
 
   return {
     status: 'live',
@@ -426,6 +443,7 @@ function buildLiveResearchResponse(query, coin) {
       signalInterpretation,
       researchBrief,
       sector,
+      sectorIntelligence,
       project,
       media: {
         thumbUrl: coin?.image?.thumb ?? null,
@@ -535,7 +553,7 @@ export default async function handler(req, res) {
   try {
     const queryValue = typeof req.query?.q === 'string' ? req.query.q : '';
     const { statusCode, body } = await resolveResearch(queryValue);
-    return json(res, statusCode, ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body)))));
+    return json(res, statusCode, ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body))))));
   } catch (error) {
     return json(res, 500, {
       status: 'error',

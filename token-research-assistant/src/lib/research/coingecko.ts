@@ -3,6 +3,7 @@ import { calculateRiskAnalysis } from '../../utils/calculateRiskAnalysis';
 import { generateSignalInterpretation } from '../../utils/generateSignalInterpretation';
 import { generateResearchBrief } from '../../utils/generateResearchBrief';
 import { mapToSector } from '../../utils/mapToSector';
+import { getSectorIntelligence } from '../../utils/getSectorIntelligence';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
@@ -141,6 +142,7 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
     categories: project.categories
   });
   const sector = mapToSector(project.categories, coin.name ?? query.raw, project.description);
+  const sectorIntelligence = getSectorIntelligence(sector);
 
   const result: ResearchResult = {
     identity: {
@@ -156,6 +158,7 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
     signalInterpretation,
     researchBrief,
     sector,
+    sectorIntelligence,
     project,
     media: {
       thumbUrl: coin.image?.thumb ?? null,

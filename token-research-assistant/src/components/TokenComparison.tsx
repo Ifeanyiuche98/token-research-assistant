@@ -129,6 +129,12 @@ function getSectorComparisonCopy(left: ResearchResponse, right: ResearchResponse
     : 'These assets belong to different sectors and may serve different roles in the ecosystem.';
 }
 
+function getSectorIntelligenceComparisonCopy(left: ResearchResponse, right: ResearchResponse) {
+  return getSector(left) === getSector(right)
+    ? 'Both assets belong to the same sector and are more directly comparable on market position, adoption, and relative strength.'
+    : 'These assets belong to different sectors and may serve different roles in the ecosystem, so comparisons should be interpreted with more context.';
+}
+
 function getHigherValueHighlight(leftValue: number | null, rightValue: number | null): HighlightSide {
   if (leftValue === null || rightValue === null) {
     return null;
@@ -269,6 +275,27 @@ function ResearchBriefSide({ response }: { response: ResearchResponse }) {
   );
 }
 
+function SectorIntelligenceSide({ response }: { response: ResearchResponse }) {
+  const intelligence = response.result?.sectorIntelligence;
+
+  if (!intelligence) {
+    return <p className="comparison-side-message">No sector intelligence available.</p>;
+  }
+
+  return (
+    <div className="comparison-signal-side">
+      <p className="comparison-side-message comparison-side-message-tight">{intelligence.profile}</p>
+      <div className="signal-chip-list comparison-signal-chip-list">
+        {intelligence.watchouts.slice(0, 3).map((watchout) => (
+          <span key={watchout} className="signal-chip signal-chip-neutral">
+            {watchout}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SignalInterpretationSide({ response }: { response: ResearchResponse }) {
   const interpretation = response.result?.signalInterpretation;
 
@@ -354,6 +381,23 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
           ))}
         </div>
         <p className="comparison-sector-copy">{getSectorComparisonCopy(left, right)}</p>
+      </section>
+      <section className="comparison-section">
+        <div className="note-panel-header">
+          <p className="state-kicker">Sector intelligence comparison</p>
+        </div>
+        <div className="comparison-identity-grid">
+          {[left, right].map((response, index) => (
+            <article key={`${response.query.raw}-sector-intelligence-${index}`} className="comparison-token-card">
+              <div className="comparison-token-top">
+                <h3>{getDisplayName(response)}</h3>
+                <span className="sector-badge">{getSector(response)}</span>
+              </div>
+              <SectorIntelligenceSide response={response} />
+            </article>
+          ))}
+        </div>
+        <p className="comparison-sector-copy">{getSectorIntelligenceComparisonCopy(left, right)}</p>
       </section>
       <ComparisonSection title="Core market snapshot" left={left} right={right} fields={marketFields} />
       <ComparisonSection title="Market risk comparison" left={left} right={right} fields={riskFields} />

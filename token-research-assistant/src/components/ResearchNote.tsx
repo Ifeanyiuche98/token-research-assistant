@@ -125,6 +125,7 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
   const signalInterpretation = response?.result?.signalInterpretation ?? null;
   const researchBrief = response?.result?.researchBrief ?? null;
   const sector = response?.result?.sector ?? 'Unknown';
+  const sectorIntelligence = response?.result?.sectorIntelligence ?? null;
   const liveResult = response?.status === 'live';
   const logoUrl = response?.result?.media.smallUrl ?? response?.result?.media.thumbUrl ?? null;
   const categories = response?.result?.project.categories ?? [];
@@ -214,6 +215,20 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
         </div>
         <p className="research-brief-body">{getSectorExplanation(sector)}</p>
       </section>
+
+      {sectorIntelligence ? (
+        <section className="note-data-panel note-data-panel-sector-intelligence">
+          <div className="note-panel-header">
+            <p className="state-kicker">Sector intelligence</p>
+          </div>
+          <p className="research-brief-body">{sectorIntelligence.profile}</p>
+          <ul className="risk-signal-list sector-watchout-list">
+            {sectorIntelligence.watchouts.slice(0, 3).map((watchout) => (
+              <li key={watchout}>{watchout}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {marketItems.length > 0 ? (
         <section className="note-data-panel">
