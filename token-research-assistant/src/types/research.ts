@@ -11,6 +11,22 @@ export type ResearchNote = {
 
 export type ResearchStatus = 'live' | 'fallback' | 'not_found' | 'error';
 
+export type RiskLevel = 'low' | 'medium' | 'high' | 'unknown';
+
+export type RiskSignal = {
+  key: 'missing_market_data' | 'low_volume' | 'high_24h_move' | 'small_market_cap' | 'fdv_gap';
+  label: string;
+  value: string;
+  impact: 'low' | 'medium' | 'high';
+};
+
+export type RiskAnalysis = {
+  level: RiskLevel;
+  score: number | null;
+  summary: string;
+  signals: RiskSignal[];
+};
+
 export type ResearchResult = {
   identity: {
     id: string | null;
@@ -29,6 +45,7 @@ export type ResearchResult = {
     marketCapRank: number | null;
     lastUpdated: string | null;
   };
+  risk: RiskAnalysis | null;
   project: {
     description: string | null;
     categories: string[];

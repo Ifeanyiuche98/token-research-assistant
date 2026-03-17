@@ -91,6 +91,21 @@ function getLink(response: ResearchResponse, key: 'homepage' | 'twitter' | 'gith
   return response.result?.links[key][0] ?? '—';
 }
 
+function formatRiskLevel(response: ResearchResponse) {
+  const level = response.result?.risk?.level;
+  if (!level) return '—';
+  return level.charAt(0).toUpperCase() + level.slice(1);
+}
+
+function formatRiskScore(response: ResearchResponse) {
+  const score = response.result?.risk?.score;
+  return score === null || score === undefined ? '—' : `${score}/100`;
+}
+
+function formatRiskSummary(response: ResearchResponse) {
+  return response.result?.risk?.summary ?? '—';
+}
+
 function getHigherValueHighlight(leftValue: number | null, rightValue: number | null): HighlightSide {
   if (leftValue === null || rightValue === null) {
     return null;
@@ -150,7 +165,25 @@ function buildFields(left: ResearchResponse, right: ResearchResponse) {
     }
   ];
 
-  return { marketFields, projectFields, linkFields, freshnessFields };
+  const riskFields: ComparisonField[] = [
+    {
+      label: 'Risk Level',
+      left: formatRiskLevel(left),
+      right: formatRiskLevel(right)
+    },
+    {
+      label: 'Risk Score',
+      left: formatRiskScore(left),
+      right: formatRiskScore(right)
+    },
+    {
+      label: 'Risk Summary',
+      left: formatRiskSummary(left),
+      right: formatRiskSummary(right)
+    }
+  ];
+
+  return { marketFields, projectFields, linkFields, freshnessFields, riskFields };
 }
 
 function getValueClassName(field: ComparisonField, side: 'left' | 'right') {
@@ -204,7 +237,7 @@ function ComparisonSection({
 
 export function TokenComparison({ comparison }: TokenComparisonProps) {
   const { left, right } = comparison;
-  const { marketFields, projectFields, linkFields, freshnessFields } = buildFields(left, right);
+  const { marketFields, projectFields, linkFields, freshnessFields, riskFields } = buildFields(left, right);
 
   return (
     <section className="card comparison-card">
@@ -236,6 +269,7 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
       </section>
 
       <ComparisonSection title="Core market snapshot" left={left} right={right} fields={marketFields} />
+      <ComparisonSection title="Market risk comparison" left={left} right={right} fields={riskFields} />
       <ComparisonSection title="Project basics" left={left} right={right} fields={projectFields} />
       <ComparisonSection title="Official links" left={left} right={right} fields={linkFields} />
       <ComparisonSection title="Last updated" left={left} right={right} fields={freshnessFields} />

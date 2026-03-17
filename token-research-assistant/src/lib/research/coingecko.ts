@@ -1,4 +1,5 @@
 import type { ResearchResponse, ResearchResult } from '../../types/research';
+import { calculateRiskAnalysis } from '../../utils/calculateRiskAnalysis';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
@@ -109,6 +110,16 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
   const twitter = buildSocialUrl('https://twitter.com/', coin.links?.twitter_screen_name);
   const telegram = buildSocialUrl('https://t.me/', coin.links?.telegram_channel_identifier);
 
+  const market = {
+    priceUsd: coin.market_data?.current_price?.usd ?? null,
+    marketCapUsd: coin.market_data?.market_cap?.usd ?? null,
+    fullyDilutedValuationUsd: coin.market_data?.fully_diluted_valuation?.usd ?? null,
+    volume24hUsd: coin.market_data?.total_volume?.usd ?? null,
+    change24hPct: coin.market_data?.price_change_percentage_24h ?? null,
+    marketCapRank: coin.market_cap_rank ?? null,
+    lastUpdated: coin.last_updated ?? null
+  };
+
   const result: ResearchResult = {
     identity: {
       id: coin.id ?? null,
@@ -118,15 +129,8 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
       source: 'coingecko',
       confidence: 'high'
     },
-    market: {
-      priceUsd: coin.market_data?.current_price?.usd ?? null,
-      marketCapUsd: coin.market_data?.market_cap?.usd ?? null,
-      fullyDilutedValuationUsd: coin.market_data?.fully_diluted_valuation?.usd ?? null,
-      volume24hUsd: coin.market_data?.total_volume?.usd ?? null,
-      change24hPct: coin.market_data?.price_change_percentage_24h ?? null,
-      marketCapRank: coin.market_cap_rank ?? null,
-      lastUpdated: coin.last_updated ?? null
-    },
+    market,
+    risk: calculateRiskAnalysis(market),
     project: {
       description: cleanText(coin.description?.en),
       categories: coin.categories ?? [],

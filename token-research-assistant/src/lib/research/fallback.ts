@@ -26,6 +26,19 @@ export function getFallbackResearchResponse(query: { raw: string; normalized: st
       marketCapRank: null,
       lastUpdated: null
     },
+    risk: {
+      level: 'unknown',
+      score: null,
+      summary: 'Market risk is unavailable because live market data could not be loaded for this result.',
+      signals: [
+        {
+          key: 'missing_market_data',
+          label: 'Live market data',
+          value: 'Unavailable in fallback mode',
+          impact: 'medium'
+        }
+      ]
+    },
     project: {
       description: note.summary,
       categories: [],

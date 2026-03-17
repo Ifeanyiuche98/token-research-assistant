@@ -417,8 +417,20 @@ h2 {
   background: rgba(15, 23, 42, 0.18);
 }
 
+.note-data-panel-risk {
+  background: rgba(59, 130, 246, 0.08);
+}
+
 .note-panel-header {
   margin-bottom: 12px;
+}
+
+.note-panel-header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .note-panel-header .state-kicker {
@@ -460,6 +472,37 @@ h2 {
 
 .market-stat-negative {
   color: #fca5a5;
+}
+
+.risk-summary-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.risk-summary-text {
+  margin: 0;
+  color: #e2e8f0;
+  max-width: 720px;
+}
+
+.risk-signal-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #cbd5e1;
+}
+
+.risk-signal-list li + li {
+  margin-top: 6px;
+}
+
+.risk-footnote {
+  margin: 12px 0 0;
+  color: #94a3b8;
+  font-size: 0.88rem;
 }
 
 .link-grid {
@@ -690,6 +733,12 @@ h2 {
   background: rgba(148, 163, 184, 0.12);
   border-color: rgba(148, 163, 184, 0.2);
   color: #cbd5e1;
+}
+
+.risk-badge-high {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.24);
+  color: #fecaca;
 }
 
 @keyframes spin {

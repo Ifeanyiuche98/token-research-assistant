@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ResearchNote as ResearchNoteType, ResearchResponse } from '../types/research';
+import type { ResearchNote as ResearchNoteType, ResearchResponse, RiskAnalysis } from '../types/research';
 
 type ResearchNoteProps = {
   note: ResearchNoteType;
@@ -73,10 +73,28 @@ function buildLinkItems(response?: ResearchResponse | null) {
   ].filter((item): item is { label: string; href: string } => Boolean(item.href));
 }
 
+function getRiskBadgeClass(level: RiskAnalysis['level']) {
+  switch (level) {
+    case 'low':
+      return 'result-status-known';
+    case 'medium':
+      return 'result-status-fallback';
+    case 'high':
+      return 'risk-badge-high';
+    default:
+      return 'result-status-muted';
+  }
+}
+
+function formatRiskLevel(level: RiskAnalysis['level']) {
+  return level.charAt(0).toUpperCase() + level.slice(1);
+}
+
 export function ResearchNote({ note, response }: ResearchNoteProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const marketItems = buildMarketItems(response);
   const linkItems = buildLinkItems(response);
+  const risk = response?.result?.risk ?? null;
   const liveResult = response?.status === 'live';
   const logoUrl = response?.result?.media.smallUrl ?? response?.result?.media.thumbUrl ?? null;
   const categories = response?.result?.project.categories ?? [];
@@ -164,6 +182,29 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
               </div>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {risk ? (
+        <section className="note-data-panel note-data-panel-risk">
+          <div className="note-panel-header note-panel-header-inline">
+            <p className="state-kicker">Market risk snapshot</p>
+            <span className={`result-status-badge ${getRiskBadgeClass(risk.level)}`}>{formatRiskLevel(risk.level)}</span>
+          </div>
+          <div className="risk-summary-row">
+            <p className="risk-summary-text">{risk.summary}</p>
+            {risk.score !== null ? <span className="note-badge">Risk score: {risk.score}/100</span> : null}
+          </div>
+          {risk.signals.length > 0 ? (
+            <ul className="risk-signal-list">
+              {risk.signals.slice(0, 4).map((signal) => (
+                <li key={`${signal.key}-${signal.value}`}>
+                  <strong>{signal.label}:</strong> {signal.value}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="risk-footnote">Market risk only — not investment advice or a full project audit.</p>
         </section>
       ) : null}
 
