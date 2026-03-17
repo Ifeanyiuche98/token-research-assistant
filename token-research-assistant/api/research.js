@@ -1,5 +1,6 @@
 import { calculateRiskAnalysis } from '../src/utils/calculateRiskAnalysis.js';
 import { generateSignalInterpretation } from '../src/utils/generateSignalInterpretation.js';
+import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
@@ -152,6 +153,13 @@ function buildNeutralSignalInterpretation() {
   };
 }
 
+function buildFallbackResearchBrief() {
+  return {
+    headline: 'Limited research summary',
+    body: 'A full research brief is limited because live market data is unavailable. This result is based on fallback data.'
+  };
+}
+
 function ensureRiskOnResponse(response) {
   if (!response?.result) {
     return response;
@@ -195,6 +203,35 @@ function ensureSignalInterpretationOnResponse(response) {
   return response;
 }
 
+function ensureResearchBriefOnResponse(response) {
+  if (!response?.result) {
+    return response;
+  }
+
+  if (response.result.researchBrief) {
+    return response;
+  }
+
+  const market = response.result.market;
+  const risk = response.result.risk ?? buildUnknownRisk();
+  const signalInterpretation = response.result.signalInterpretation ?? buildNeutralSignalInterpretation();
+  const hasAnyMarketData = Boolean(
+    market &&
+      [market.priceUsd, market.marketCapUsd, market.fullyDilutedValuationUsd, market.volume24hUsd, market.change24hPct, market.marketCapRank, market.lastUpdated].some(
+        (value) => value !== null
+      )
+  );
+
+  response.result.researchBrief = hasAnyMarketData
+    ? generateResearchBrief(market, risk, signalInterpretation, {
+        name: response.result.identity?.name ?? response.query?.raw ?? 'This asset',
+        description: response.result.project?.description ?? null,
+        categories: response.result.project?.categories ?? []
+      })
+    : buildFallbackResearchBrief();
+  return response;
+}
+
 function buildFallbackResearchResponse(query, reason = 'not_listed', message = 'Live data unavailable. Showing local fallback research.') {
   const profile = findProfile(query.raw);
   const note =
@@ -234,6 +271,7 @@ function buildFallbackResearchResponse(query, reason = 'not_listed', message = '
       },
       risk: buildUnknownRisk(),
       signalInterpretation: buildNeutralSignalInterpretation(),
+      researchBrief: buildFallbackResearchBrief(),
       project: {
         description: note.summary,
         categories: [],
@@ -335,6 +373,21 @@ function buildLiveResearchResponse(query, coin) {
 
   const risk = calculateRiskAnalysis(market);
   const signalInterpretation = generateSignalInterpretation(market, risk);
+  const project = {
+    description: cleanText(coin?.description?.en),
+    categories: Array.isArray(coin?.categories) ? coin.categories : [],
+    homepageUrl: homepage[0] ?? null,
+    blockchainSiteUrls: blockchainSite,
+    officialTwitterHandle: String(coin?.links?.twitter_screen_name ?? '').trim() || null,
+    officialTelegramHandle: String(coin?.links?.telegram_channel_identifier ?? '').trim() || null,
+    sentimentVotesUpPct: coin?.sentiment_votes_up_percentage ?? null,
+    sentimentVotesDownPct: coin?.sentiment_votes_down_percentage ?? null
+  };
+  const researchBrief = generateResearchBrief(market, risk, signalInterpretation, {
+    name: coin?.name ?? query.raw,
+    description: project.description,
+    categories: project.categories
+  });
 
   return {
     status: 'live',
@@ -351,16 +404,8 @@ function buildLiveResearchResponse(query, coin) {
       market,
       risk,
       signalInterpretation,
-      project: {
-        description: cleanText(coin?.description?.en),
-        categories: Array.isArray(coin?.categories) ? coin.categories : [],
-        homepageUrl: homepage[0] ?? null,
-        blockchainSiteUrls: blockchainSite,
-        officialTwitterHandle: String(coin?.links?.twitter_screen_name ?? '').trim() || null,
-        officialTelegramHandle: String(coin?.links?.telegram_channel_identifier ?? '').trim() || null,
-        sentimentVotesUpPct: coin?.sentiment_votes_up_percentage ?? null,
-        sentimentVotesDownPct: coin?.sentiment_votes_down_percentage ?? null
-      },
+      researchBrief,
+      project,
       media: {
         thumbUrl: coin?.image?.thumb ?? null,
         smallUrl: coin?.image?.small ?? null,
@@ -469,7 +514,7 @@ export default async function handler(req, res) {
   try {
     const queryValue = typeof req.query?.q === 'string' ? req.query.q : '';
     const { statusCode, body } = await resolveResearch(queryValue);
-    return json(res, statusCode, ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body)));
+    return json(res, statusCode, ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body))));
   } catch (error) {
     return json(res, 500, {
       status: 'error',

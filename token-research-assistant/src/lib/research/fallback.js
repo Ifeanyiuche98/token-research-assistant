@@ -16,6 +16,10 @@ export function getFallbackResearchResponse(query) {
             }
         ]
     };
+    const researchBrief = {
+        headline: 'Limited research summary',
+        body: 'A full research brief is limited because live market data is unavailable. This result is based on fallback data.'
+    };
     const result = {
         identity: {
             id: `local-${slugify(note.project)}`,
@@ -48,6 +52,7 @@ export function getFallbackResearchResponse(query) {
             ]
         },
         signalInterpretation,
+        researchBrief,
         project: {
             description: note.summary,
             categories: [],

@@ -425,6 +425,10 @@ h2 {
   background: rgba(30, 41, 59, 0.24);
 }
 
+.note-data-panel-brief {
+  background: rgba(15, 23, 42, 0.24);
+}
+
 .note-panel-header {
   margin-bottom: 12px;
 }
@@ -476,6 +480,21 @@ h2 {
 
 .market-stat-negative {
   color: #fca5a5;
+}
+
+.research-brief-headline {
+  margin: 0 0 8px;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.research-brief-headline-compact {
+  margin-bottom: 6px;
+}
+
+.research-brief-body {
+  margin: 0;
+  color: #e2e8f0;
 }
 
 .risk-summary-row {

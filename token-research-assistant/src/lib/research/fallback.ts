@@ -1,5 +1,5 @@
 import { getResearchNote } from '../../data/mockResearch';
-import type { ResearchResponse, ResearchResult, SignalInterpretation } from '../../types/research';
+import type { ResearchBrief, ResearchResponse, ResearchResult, SignalInterpretation } from '../../types/research';
 
 function slugify(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, '-');
@@ -18,6 +18,10 @@ export function getFallbackResearchResponse(query: { raw: string; normalized: st
         tone: 'neutral'
       }
     ]
+  };
+  const researchBrief: ResearchBrief = {
+    headline: 'Limited research summary',
+    body: 'A full research brief is limited because live market data is unavailable. This result is based on fallback data.'
   };
 
   const result: ResearchResult = {
@@ -52,6 +56,7 @@ export function getFallbackResearchResponse(query: { raw: string; normalized: st
       ]
     },
     signalInterpretation,
+    researchBrief,
     project: {
       description: note.summary,
       categories: [],

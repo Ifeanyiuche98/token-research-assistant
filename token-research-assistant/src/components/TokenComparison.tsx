@@ -110,6 +110,15 @@ function getSignalToneClass(tone: SignalTone) {
   return `signal-chip-${tone}`;
 }
 
+function getResearchBrief(response: ResearchResponse) {
+  return (
+    response.result?.researchBrief ?? {
+      headline: 'Limited research summary',
+      body: 'A research brief is not available for this result yet.'
+    }
+  );
+}
+
 function getHigherValueHighlight(leftValue: number | null, rightValue: number | null): HighlightSide {
   if (leftValue === null || rightValue === null) {
     return null;
@@ -239,6 +248,17 @@ function ComparisonSection({
   );
 }
 
+function ResearchBriefSide({ response }: { response: ResearchResponse }) {
+  const brief = getResearchBrief(response);
+
+  return (
+    <div className="comparison-signal-side">
+      <p className="research-brief-headline research-brief-headline-compact">{brief.headline}</p>
+      <p className="comparison-side-message comparison-side-message-tight">{brief.body}</p>
+    </div>
+  );
+}
+
 function SignalInterpretationSide({ response }: { response: ResearchResponse }) {
   const interpretation = response.result?.signalInterpretation;
 
@@ -293,6 +313,22 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
         </div>
       </section>
 
+      <section className="comparison-section">
+        <div className="note-panel-header">
+          <p className="state-kicker">Research brief comparison</p>
+        </div>
+        <div className="comparison-identity-grid">
+          {[left, right].map((response, index) => (
+            <article key={`${response.query.raw}-brief-${index}`} className="comparison-token-card">
+              <div className="comparison-token-top">
+                <h3>{getDisplayName(response)}</h3>
+                <span className={`result-status-badge ${getSourceClass(response)}`}>{getSourceLabel(response)}</span>
+              </div>
+              <ResearchBriefSide response={response} />
+            </article>
+          ))}
+        </div>
+      </section>
       <ComparisonSection title="Core market snapshot" left={left} right={right} fields={marketFields} />
       <ComparisonSection title="Market risk comparison" left={left} right={right} fields={riskFields} />
       <section className="comparison-section">

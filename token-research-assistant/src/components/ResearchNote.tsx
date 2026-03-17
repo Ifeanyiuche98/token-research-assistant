@@ -100,6 +100,7 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
   const linkItems = buildLinkItems(response);
   const risk = response?.result?.risk ?? null;
   const signalInterpretation = response?.result?.signalInterpretation ?? null;
+  const researchBrief = response?.result?.researchBrief ?? null;
   const liveResult = response?.status === 'live';
   const logoUrl = response?.result?.media.smallUrl ?? response?.result?.media.thumbUrl ?? null;
   const categories = response?.result?.project.categories ?? [];
@@ -171,6 +172,16 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
           </div>
         ) : null}
       </div>
+
+      {researchBrief ? (
+        <section className="note-data-panel note-data-panel-brief">
+          <div className="note-panel-header">
+            <p className="state-kicker">Research brief</p>
+          </div>
+          <p className="research-brief-headline">{researchBrief.headline}</p>
+          <p className="research-brief-body">{researchBrief.body}</p>
+        </section>
+      ) : null}
 
       {marketItems.length > 0 ? (
         <section className="note-data-panel">
