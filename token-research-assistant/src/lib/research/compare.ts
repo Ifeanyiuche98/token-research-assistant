@@ -1,5 +1,6 @@
 import { resolveResearch } from './endpoint';
 import { normalizeQuery } from './query';
+import { generateComparativeIntelligence } from '../../utils/generateComparativeIntelligence';
 import type { CompareResponse } from '../../types/compare';
 
 export async function resolveComparison(leftQueryValue: string, rightQueryValue: string): Promise<{ statusCode: number; body: CompareResponse | { message: string } }> {
@@ -31,6 +32,7 @@ export async function resolveComparison(leftQueryValue: string, rightQueryValue:
     body: {
       left: left.body,
       right: right.body,
+      comparativeIntelligence: generateComparativeIntelligence(left.body, right.body),
       meta: {
         generatedAt: new Date().toISOString()
       }
