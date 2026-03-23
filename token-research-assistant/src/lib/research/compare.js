@@ -1,5 +1,6 @@
 import { resolveResearch } from './endpoint';
 import { normalizeQuery } from './query';
+import { generateComparativeIntelligence } from '../../utils/generateComparativeIntelligence';
 export async function resolveComparison(leftQueryValue, rightQueryValue) {
     const leftTrimmed = leftQueryValue.trim();
     const rightTrimmed = rightQueryValue.trim();
@@ -25,6 +26,7 @@ export async function resolveComparison(leftQueryValue, rightQueryValue) {
         body: {
             left: left.body,
             right: right.body,
+            comparativeIntelligence: generateComparativeIntelligence(left.body, right.body),
             meta: {
                 generatedAt: new Date().toISOString()
             }

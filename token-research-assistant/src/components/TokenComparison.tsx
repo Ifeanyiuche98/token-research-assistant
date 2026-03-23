@@ -1,4 +1,4 @@
-import type { CompareResponse } from '../types/compare';
+import type { CompareResponse, ComparisonInsightItem } from '../types/compare';
 import type { ResearchResponse, SignalTone } from '../types/research';
 
 type TokenComparisonProps = {
@@ -317,8 +317,34 @@ function SignalInterpretationSide({ response }: { response: ResearchResponse }) 
   );
 }
 
+function getComparisonInsightBadgeClass(item: ComparisonInsightItem) {
+  switch (item.betterSide) {
+    case 'left':
+      return 'result-status-known';
+    case 'right':
+      return 'result-status-fallback';
+    case 'tie':
+      return 'result-status-muted';
+    default:
+      return 'result-status-muted';
+  }
+}
+
+function getComparisonInsightBadgeLabel(item: ComparisonInsightItem) {
+  switch (item.betterSide) {
+    case 'left':
+      return 'Left stronger';
+    case 'right':
+      return 'Right stronger';
+    case 'tie':
+      return 'Tie';
+    default:
+      return 'Unknown';
+  }
+}
+
 export function TokenComparison({ comparison }: TokenComparisonProps) {
-  const { left, right } = comparison;
+  const { left, right, comparativeIntelligence } = comparison;
   const { marketFields, projectFields, linkFields, freshnessFields, riskFields } = buildFields(left, right);
 
   return (
@@ -399,6 +425,25 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
         </div>
         <p className="comparison-sector-copy">{getSectorIntelligenceComparisonCopy(left, right)}</p>
       </section>
+      {comparativeIntelligence && (
+        <section className="comparison-section">
+          <div className="note-panel-header">
+            <p className="state-kicker">Comparative intelligence</p>
+          </div>
+          <p className="comparison-sector-copy">{comparativeIntelligence.summary}</p>
+          <div className="comparison-identity-grid">
+            {comparativeIntelligence.items.map((item) => (
+              <article key={item.key} className="comparison-token-card">
+                <div className="comparison-token-top">
+                  <h3>{item.label}</h3>
+                  <span className={`result-status-badge ${getComparisonInsightBadgeClass(item)}`}>{getComparisonInsightBadgeLabel(item)}</span>
+                </div>
+                <p className="comparison-side-message comparison-side-message-tight">{item.summary}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <ComparisonSection title="Core market snapshot" left={left} right={right} fields={marketFields} />
       <ComparisonSection title="Market risk comparison" left={left} right={right} fields={riskFields} />
       <section className="comparison-section">
