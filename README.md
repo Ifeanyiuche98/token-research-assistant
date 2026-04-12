@@ -70,7 +70,7 @@ A powerful side-by-side comparison system for evaluating two crypto assets.
 ## 🏗️ Architecture
 
 - **Frontend:** React + TypeScript (Vite)  
-- **Data Source:** CoinGecko API  
+- **Primary Market Data Source:** CoinGecko API
 - **Fallback System:** Local dataset (ensures reliability)  
 - **Deployment:** Vercel  
 
@@ -81,8 +81,8 @@ A powerful side-by-side comparison system for evaluating two crypto assets.
 - Core Research Engine: ✅ Completed  
 - Token Comparison Engine: ✅ Active  
 - UI/UX Optimization: ⚙️ Ongoing  
-- LLM Integration (GLADYS): ⚙️ In Progress  
-- External API Stability Handling: ⚙️ Improving  
+- LLM Integration (GLADYS): ⚙️ Infrastructure integration in Progress  
+- External API Stability Handling: ⚙️ resilience Improvements in progress
 
 ---
 
@@ -101,7 +101,7 @@ To become a **trusted intelligence layer for Web3 research**, where users can:
 ## 👨‍💻 Author
 
 **Ifeanyi Raymond Uche**  
-Blockchain Educator | Web3 Builder | Community Leader  
+Blockchain Educator | Web3 Builder | Community Leader | Product Research Systems Builder
 
 ---
 
