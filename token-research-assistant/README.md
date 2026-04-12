@@ -1,130 +1,151 @@
-# token-research-assistant
+# Token Research Assistant
 
-A lightweight frontend web app for generating short research notes about crypto tokens and projects.
+**Structured crypto intelligence, not hype.**
 
-The goal is to keep the project simple, beginner-friendly, and easy to deploy. A user enters a token or project name, clicks a button, and gets a short markdown-style note with the most important first-pass research points.
+---
 
-## Overview
+## 🚀 Overview
 
-This app is intentionally frontend-only for now.
+Token Research Assistant is a web-based crypto research and comparison tool designed to help users understand digital assets through structured, deterministic market intelligence rather than speculative hype or scattered information.
 
-It uses a small local research dataset plus a graceful fallback mode for unknown inputs. That makes it useful for demos without needing a backend, API keys, or external services.
+It transforms raw market data into clear, layered insights covering structure, risk, sector context, and signal interpretation.
 
-## Stack
+---
 
-- **Vite**
-- **React**
-- **TypeScript**
-- **Plain CSS**
+## 🎯 Problem
 
-Why this stack:
+Crypto research today is fragmented across:
+- Social media
+- Influencers
+- Exchange dashboards
+- Multiple inconsistent data sources
 
-- fast local development
-- simple project structure
-- low setup complexity
-- easy deployment to Vercel
+This leads to:
+- Confusion
+- Emotional decisions
+- Poor risk understanding
 
-## Current MVP Features
+---
 
-- search by token or project name
-- generate a short research note with:
-  - summary
-  - use case
-  - risks
-  - ecosystem notes
-- loading state while generating
-- validation for empty input
-- quick example chips for fast testing
-- auto-submit when clicking a sample chip
-- clear button to reset the form and result
-- copy note button for easy sharing
-- known dataset match vs fallback status badge
-- welcoming empty state before first search
+## 💡 Solution
 
-## Supported Built-in Projects
+Token Research Assistant provides a **structured intelligence system** that organizes token analysis into:
 
-The local dataset currently includes:
+- Market snapshot  
+- Research brief  
+- Sector context  
+- Risk analysis  
+- Signal interpretation  
+- Side-by-side comparison  
 
-- Bitcoin
-- Ethereum
-- Solana
-- Chainlink
-- Uniswap
+The system is designed to be:
+- Clear  
+- Deterministic  
+- Easy to understand  
 
-Unknown inputs still return a cautious fallback research note.
+---
 
-## Local Development
+## ⚙️ Core Features
 
-Install dependencies:
+### 🔹 Single Token Analysis
+- Market snapshot
+- Risk score & summary
+- Signal interpretation
+- Research brief
+- Sector tagging
+- Sector intelligence
 
-```bash
-npm install
-```
+### 🔹 Compare Mode
+- Token vs Token comparison
+- Market structure comparison
+- Risk comparison
+- Signal comparison
+- Sector comparison
 
-Start the development server:
+### 🔹 System Capabilities
+- Live + fallback data handling
+- Deterministic intelligence engine
+- Dark / Light theme support
 
-```bash
-npm run dev
-```
+---
 
-Then open the local URL shown in the terminal.
+## 🧠 Architecture
 
-## Production Build
+The system is built using layered intelligence:
 
-Create a production build:
+1. Data ingestion  
+2. Market structuring  
+3. Risk engine  
+4. Signal interpretation  
+5. Research brief generation  
+6. Sector tagging & intelligence  
+7. Comparative intelligence  
 
-```bash
-npm run build
-```
+📄 Full system design available here:  
+👉 `docs/system-overview.md`
 
-Preview the production build locally:
+---
 
-```bash
-npm run preview
-```
+## 🏗️ Tech Stack
 
-## Project Structure
+- React  
+- TypeScript  
+- Vite  
+- OpenClaw (agent framework)  
+- Remote LLM integration (Ollama-based)  
+- Tailscale (secure network access)  
 
-```text
-token-research-assistant/
-├─ public/
-├─ src/
-│  ├─ components/
-│  │  ├─ LoadingState.tsx
-│  │  ├─ ResearchNote.tsx
-│  │  └─ TokenForm.tsx
-│  ├─ data/
-│  │  └─ mockResearch.ts
-│  ├─ types/
-│  │  └─ research.ts
-│  ├─ utils/
-│  │  └─ generateResearchNote.ts
-│  ├─ App.tsx
-│  ├─ main.tsx
-│  └─ styles.css
-├─ index.html
-├─ package.json
-├─ tsconfig.app.json
-├─ tsconfig.json
-├─ tsconfig.node.json
-├─ vite.config.ts
-└─ README.md
-```
+---
 
-## Vercel Deployment Notes
+## ⚡ Current Status
 
-This project is a standard Vite static frontend, so it is a good fit for Vercel.
+- ✅ Core product logic complete  
+- ✅ UI & intelligence layers functional  
+- ⚠️ AI layer pending remote model connectivity  
 
-Typical Vercel settings:
+Current phase:
+> **Infrastructure Integration Phase**
 
-- **Framework Preset:** Vite
-- **Build Command:** `npm run build`
-- **Output Directory:** `dist`
+---
 
-No backend setup is required for the current version.
+## 🛣️ Roadmap
 
-## Status
+### Short Term
+- UI/UX polish
+- Improved helper text
+- Better loading states
 
-The app is deployment-ready as a frontend-only Vercel project.
+### Next Phase
+- AI-assisted research generation
+- Comparative verdict engine
+- User intent modes
+- Monetization layer
 
-Future upgrades can add a real research API or AI generation layer, but the current version is intentionally small and demo-friendly.
+---
+
+## 🌍 Vision
+
+To build a lightweight crypto intelligence platform that:
+
+- Simplifies decision-making  
+- Reduces misinformation  
+- Scales globally  
+
+Future directions include:
+- SaaS platform  
+- API product  
+- Telegram assistant  
+- Education dashboard  
+
+---
+
+## 👤 Author
+
+**Ifeanyi Raymond Uche**  
+Blockchain Educator | Web3 Builder  
+
+---
+
+## 📌 Note
+
+This project prioritizes **clarity over hype** and **understanding over speculation**.
