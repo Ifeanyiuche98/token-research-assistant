@@ -6,6 +6,12 @@ A structured intelligence system for analyzing and comparing crypto assets — b
 
 ---
 
+## Preview
+
+! [App Screenshot] (./images/screenshot.png)
+
+---
+
 ## 🎯 Why This Exists
 
 Crypto research today is fragmented, noisy, and driven by speculation.
