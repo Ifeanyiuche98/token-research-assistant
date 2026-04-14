@@ -1,151 +1,124 @@
-# Token Research Assistant
+# 🚀 Token Research Assistant
 
-**Structured crypto intelligence, not hype.**
+A structured intelligence system for analyzing and comparing crypto assets — built to replace hype with clarity.
 
----
-
-## 🚀 Overview
-
-Token Research Assistant is a web-based crypto research and comparison tool designed to help users understand digital assets through structured, deterministic market intelligence rather than speculative hype or scattered information.
-
-It transforms raw market data into clear, layered insights covering structure, risk, sector context, and signal interpretation.
+🔗 **Live Demo:** https://token-research-assistant.vercel.app/
 
 ---
 
-## 🎯 Problem
+## 🎯 Why This Exists
 
-Crypto research today is fragmented across:
-- Social media
-- Influencers
-- Exchange dashboards
-- Multiple inconsistent data sources
+Crypto research today is fragmented, noisy, and driven by speculation.
 
-This leads to:
-- Confusion
-- Emotional decisions
-- Poor risk understanding
+Most tools provide scattered data without context, leaving users to interpret signals blindly.
+
+**Token Research Assistant solves this by delivering structured, deterministic insights — helping users make informed decisions based on data, not hype.**
 
 ---
 
-## 💡 Solution
+## 🧠 What It Does
 
-Token Research Assistant provides a **structured intelligence system** that organizes token analysis into:
+Token Research Assistant is a web-based crypto research and comparison tool that allows users to:
 
-- Market snapshot  
-- Research brief  
-- Sector context  
-- Risk analysis  
-- Signal interpretation  
-- Side-by-side comparison  
+- Analyze a single token or project
+- Compare two tokens side-by-side
+- Understand risk, context, and market positioning
 
-The system is designed to be:
-- Clear  
-- Deterministic  
-- Easy to understand  
+All in one clean interface.
 
 ---
 
 ## ⚙️ Core Features
 
-### 🔹 Single Token Analysis
-- Market snapshot
-- Risk score & summary
-- Signal interpretation
-- Research brief
-- Sector tagging
-- Sector intelligence
+### 🔍 Research Engine
+Users can input a token or project name and instantly receive:
 
-### 🔹 Compare Mode
-- Token vs Token comparison
-- Market structure comparison
-- Risk comparison
-- Signal comparison
-- Sector comparison
-
-### 🔹 System Capabilities
-- Live + fallback data handling
-- Deterministic intelligence engine
-- Dark / Light theme support
+- Summary  
+- Use case  
+- Key risks  
+- Ecosystem insights  
 
 ---
 
-## 🧠 Architecture
+### ⚖️ Token Comparison Engine
 
-The system is built using layered intelligence:
+A powerful side-by-side comparison system for evaluating two crypto assets.
 
-1. Data ingestion  
-2. Market structuring  
-3. Risk engine  
-4. Signal interpretation  
-5. Research brief generation  
-6. Sector tagging & intelligence  
-7. Comparative intelligence  
-
-📄 Full system design available here:  
-👉 `docs/system-overview.md`
+#### Features:
+- Side-by-side token comparison  
+- Live market metrics (CoinGecko API)  
+- Automatic fallback dataset (offline resilience)  
+- Highlight stronger metrics  
+- Swap tokens instantly  
+- Clean research summary view  
 
 ---
 
-## 🏗️ Tech Stack
+## 📊 Example Comparison Fields
 
-- React  
-- TypeScript  
-- Vite  
-- OpenClaw (agent framework)  
-- Remote LLM integration (Ollama-based)  
-- Tailscale (secure network access)  
-
----
-
-## ⚡ Current Status
-
-- ✅ Core product logic complete  
-- ✅ UI & intelligence layers functional  
-- ⚠️ AI layer pending remote model connectivity  
-
-Current phase:
-> **Infrastructure Integration Phase**
+- Price  
+- 24h Change  
+- Market Cap  
+- 24h Volume  
+- Fully Diluted Valuation  
+- Project Summary  
+- Categories  
+- Official Links  
 
 ---
 
-## 🛣️ Roadmap
+## 🏗️ Architecture
 
-### Short Term
-- UI/UX polish
-- Improved helper text
-- Better loading states
-
-### Next Phase
-- AI-assisted research generation
-- Comparative verdict engine
-- User intent modes
-- Monetization layer
+- **Frontend:** React + TypeScript (Vite)  
+- **Data Source:** CoinGecko API  
+- **Fallback System:** Local dataset (ensures reliability)  
+- **Deployment:** Vercel  
 
 ---
 
-## 🌍 Vision
+## 📌 Current Development Status
 
-To build a lightweight crypto intelligence platform that:
+- Core Research Engine: ✅ Completed  
+- Token Comparison Engine: ✅ Active  
+- UI/UX Optimization: ⚙️ Ongoing  
+- LLM Integration (GLADYS): ⚙️ In Progress  
+- External API Stability Handling: ⚙️ Improving  
 
-- Simplifies decision-making  
-- Reduces misinformation  
-- Scales globally  
+---
+## 🧩 Vision
 
-Future directions include:
-- SaaS platform  
-- API product  
-- Telegram assistant  
-- Education dashboard  
+To become a **trusted intelligence layer for Web3 research**, where users can:
+
+- Move beyond speculation  
+- Understand market signals clearly  
+- Make smarter, data-driven decisions  
 
 ---
 
-## 👤 Author
+## 👨‍💻 Author
 
 **Ifeanyi Raymond Uche**  
-Blockchain Educator | Web3 Builder  
+Blockchain Educator | Web3 Builder | Community Leader  
 
 ---
 
-## 📌 Note
+## 🌍 Deployment
 
-This project prioritizes **clarity over hype** and **understanding over speculation**.
+Live on Vercel:  
+👉 https://token-research-assistant.vercel.app/
+
+---
+
+## 📈 Future Improvements
+
+- Multi-token comparison (more than 2 assets)  
+- Portfolio tracking  
+- Advanced risk scoring model  
+- On-chain data integration  
+- AI-powered research assistant (GLADYS)  
+
+---
+
+## ⭐ Final Note
+
+This project is part of a broader vision to simplify access to structured crypto intelligence and make Web3 research more accessible to everyone.
