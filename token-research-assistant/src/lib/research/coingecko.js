@@ -140,14 +140,34 @@ function buildLiveResponse(query, coin) {
     };
 }
 export async function getCoinGeckoResearchResponse(query) {
+    let contractLookupError = null;
     if (isEthereumContractAddress(query.raw)) {
-        const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(query.raw)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+        const contractAddress = query.raw.trim().toLowerCase();
+        const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
         try {
-            const contractData = await fetchJson(contractUrl);
+            const contractResponse = await fetch(contractUrl, {
+                headers: {
+                    accept: 'application/json'
+                }
+            });
+            if (!contractResponse.ok) {
+                const responseText = await contractResponse.text();
+                const error = new Error(`CoinGecko contract lookup failed with status ${contractResponse.status}`);
+                error.status = contractResponse.status;
+                error.contractLookup = {
+                    attempted: true,
+                    url: contractUrl,
+                    address: contractAddress,
+                    status: contractResponse.status,
+                    responseText
+                };
+                throw error;
+            }
+            const contractData = (await contractResponse.json());
             return buildLiveResponse(query, contractData);
         }
-        catch {
-            // Fall through to the normal search flow when contract lookup fails.
+        catch (error) {
+            contractLookupError = error;
         }
     }
     const searchUrl = `${COINGECKO_BASE_URL}/search?query=${encodeURIComponent(query.raw)}`;
@@ -155,6 +175,9 @@ export async function getCoinGeckoResearchResponse(query) {
     const exactMatch = searchData.coins?.find((coin) => coin.id.toLowerCase() === query.normalized || coin.name.toLowerCase() === query.normalized || coin.symbol.toLowerCase() === query.normalized);
     const selectedCoin = exactMatch ?? searchData.coins?.[0];
     if (!selectedCoin?.id) {
+        if (contractLookupError) {
+            throw contractLookupError;
+        }
         return null;
     }
     const detailUrl = `${COINGECKO_BASE_URL}/coins/${encodeURIComponent(selectedCoin.id)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;

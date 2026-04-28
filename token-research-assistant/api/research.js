@@ -484,14 +484,35 @@ function buildLiveResearchResponse(query, coin) {
 }
 
 async function getCoinGeckoResearchResponse(query) {
+  let contractLookupError = null;
+
   if (isEthereumContractAddress(query.raw)) {
-    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(query.raw)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+    const contractAddress = query.raw.trim().toLowerCase();
+    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
 
     try {
-      const contractData = await fetchJson(contractUrl);
+      const contractResponse = await fetch(contractUrl, {
+        headers: { accept: 'application/json' }
+      });
+
+      if (!contractResponse.ok) {
+        const responseText = await contractResponse.text();
+        const error = new Error(`CoinGecko contract lookup failed with status ${contractResponse.status}`);
+        error.status = contractResponse.status;
+        error.contractLookup = {
+          attempted: true,
+          url: contractUrl,
+          address: contractAddress,
+          status: contractResponse.status,
+          responseText
+        };
+        throw error;
+      }
+
+      const contractData = await contractResponse.json();
       return buildLiveResearchResponse(query, contractData);
-    } catch {
-      // Fall through to the normal search flow when contract lookup fails.
+    } catch (error) {
+      contractLookupError = error;
     }
   }
 
@@ -507,6 +528,10 @@ async function getCoinGeckoResearchResponse(query) {
   const selectedCoin = exactMatch ?? coins[0];
 
   if (!selectedCoin?.id) {
+    if (contractLookupError) {
+      throw contractLookupError;
+    }
+
     return null;
   }
 
@@ -554,13 +579,22 @@ async function resolveResearch(queryValue) {
     };
   } catch (error) {
     const status = typeof error === 'object' && error && 'status' in error ? error.status : undefined;
+    const contractLookup = typeof error === 'object' && error && 'contractLookup' in error ? error.contractLookup : null;
+    const fallbackResponse = buildFallbackResearchResponse(
+      query,
+      status === 429 ? 'rate_limited' : 'live_lookup_failed',
+      status === 429 ? 'CoinGecko rate limit reached. Showing local fallback research.' : 'Live data unavailable. Showing local fallback research.'
+    );
+
+    if (contractLookup && typeof contractLookup === 'object') {
+      const contractStatus = 'status' in contractLookup ? contractLookup.status : 'unknown';
+      const attemptedUrl = 'url' in contractLookup ? contractLookup.url : 'unknown';
+      fallbackResponse.message = `Contract lookup failed before fallback. CoinGecko status: ${contractStatus}. URL: ${attemptedUrl}`;
+    }
+
     return {
       statusCode: 200,
-      body: buildFallbackResearchResponse(
-        query,
-        status === 429 ? 'rate_limited' : 'live_lookup_failed',
-        status === 429 ? 'CoinGecko rate limit reached. Showing local fallback research.' : 'Live data unavailable. Showing local fallback research.'
-      )
+      body: fallbackResponse
     };
   }
 }

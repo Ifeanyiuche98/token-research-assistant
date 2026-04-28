@@ -200,14 +200,55 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
 }
 
 export async function getCoinGeckoResearchResponse(query: { raw: string; normalized: string }): Promise<ResearchResponse | null> {
+  let contractLookupError: (Error & {
+    status?: number;
+    contractLookup?: {
+      attempted: true;
+      url: string;
+      address: string;
+      status: number;
+      responseText: string;
+    };
+  }) | null = null;
+
   if (isEthereumContractAddress(query.raw)) {
-    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(query.raw)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+    const contractAddress = query.raw.trim().toLowerCase();
+    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
 
     try {
-      const contractData = await fetchJson<CoinGeckoCoinResponse>(contractUrl);
+      const contractResponse = await fetch(contractUrl, {
+        headers: {
+          accept: 'application/json'
+        }
+      });
+
+      if (!contractResponse.ok) {
+        const responseText = await contractResponse.text();
+        const error = new Error(`CoinGecko contract lookup failed with status ${contractResponse.status}`) as Error & {
+          status?: number;
+          contractLookup?: {
+            attempted: true;
+            url: string;
+            address: string;
+            status: number;
+            responseText: string;
+          };
+        };
+        error.status = contractResponse.status;
+        error.contractLookup = {
+          attempted: true,
+          url: contractUrl,
+          address: contractAddress,
+          status: contractResponse.status,
+          responseText
+        };
+        throw error;
+      }
+
+      const contractData = (await contractResponse.json()) as CoinGeckoCoinResponse;
       return buildLiveResponse(query, contractData);
-    } catch {
-      // Fall through to the normal search flow when contract lookup fails.
+    } catch (error) {
+      contractLookupError = error as typeof contractLookupError;
     }
   }
 
@@ -219,6 +260,10 @@ export async function getCoinGeckoResearchResponse(query: { raw: string; normali
   const selectedCoin = exactMatch ?? searchData.coins?.[0];
 
   if (!selectedCoin?.id) {
+    if (contractLookupError) {
+      throw contractLookupError;
+    }
+
     return null;
   }
 
