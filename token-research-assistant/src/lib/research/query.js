@@ -1,7 +1,11 @@
 export const MIN_QUERY_LENGTH = 2;
 export const MAX_QUERY_LENGTH = 100;
+export const ETHEREUM_CONTRACT_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 export function normalizeQuery(value) {
     return value.trim().toLowerCase();
+}
+export function isEthereumContractAddress(value) {
+    return ETHEREUM_CONTRACT_ADDRESS_PATTERN.test(value.trim());
 }
 export function validateQuery(value) {
     const raw = value ?? '';

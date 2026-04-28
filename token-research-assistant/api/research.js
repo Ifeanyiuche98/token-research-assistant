@@ -6,6 +6,7 @@ import { getSectorIntelligence } from '../src/utils/getSectorIntelligence.js';
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
+const ETHEREUM_CONTRACT_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
 const researchProfiles = [
@@ -79,6 +80,10 @@ function json(res, statusCode, body) {
 
 function normalizeQuery(value) {
   return String(value ?? '').trim().toLowerCase();
+}
+
+function isEthereumContractAddress(value) {
+  return ETHEREUM_CONTRACT_ADDRESS_PATTERN.test(String(value ?? '').trim());
 }
 
 function validateQuery(value) {
@@ -479,6 +484,17 @@ function buildLiveResearchResponse(query, coin) {
 }
 
 async function getCoinGeckoResearchResponse(query) {
+  if (isEthereumContractAddress(query.raw)) {
+    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(query.raw)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+
+    try {
+      const contractData = await fetchJson(contractUrl);
+      return buildLiveResearchResponse(query, contractData);
+    } catch {
+      // Fall through to the normal search flow when contract lookup fails.
+    }
+  }
+
   const searchUrl = `${COINGECKO_BASE_URL}/search?query=${encodeURIComponent(query.raw)}`;
   const searchData = await fetchJson(searchUrl);
   const coins = Array.isArray(searchData?.coins) ? searchData.coins : [];

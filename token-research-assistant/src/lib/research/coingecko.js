@@ -3,6 +3,7 @@ import { generateSignalInterpretation } from '../../utils/generateSignalInterpre
 import { generateResearchBrief } from '../../utils/generateResearchBrief';
 import { mapToSector } from '../../utils/mapToSector';
 import { getSectorIntelligence } from '../../utils/getSectorIntelligence';
+import { isEthereumContractAddress } from './query';
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 function cleanText(value) {
     if (!value)
@@ -139,6 +140,16 @@ function buildLiveResponse(query, coin) {
     };
 }
 export async function getCoinGeckoResearchResponse(query) {
+    if (isEthereumContractAddress(query.raw)) {
+        const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(query.raw)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+        try {
+            const contractData = await fetchJson(contractUrl);
+            return buildLiveResponse(query, contractData);
+        }
+        catch {
+            // Fall through to the normal search flow when contract lookup fails.
+        }
+    }
     const searchUrl = `${COINGECKO_BASE_URL}/search?query=${encodeURIComponent(query.raw)}`;
     const searchData = await fetchJson(searchUrl);
     const exactMatch = searchData.coins?.find((coin) => coin.id.toLowerCase() === query.normalized || coin.name.toLowerCase() === query.normalized || coin.symbol.toLowerCase() === query.normalized);

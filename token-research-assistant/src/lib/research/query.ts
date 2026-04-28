@@ -1,5 +1,6 @@
 export const MIN_QUERY_LENGTH = 2;
 export const MAX_QUERY_LENGTH = 100;
+export const ETHEREUM_CONTRACT_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 export type QueryValidationResult =
   | {
@@ -17,6 +18,10 @@ export type QueryValidationResult =
 
 export function normalizeQuery(value: string): string {
   return value.trim().toLowerCase();
+}
+
+export function isEthereumContractAddress(value: string): boolean {
+  return ETHEREUM_CONTRACT_ADDRESS_PATTERN.test(value.trim());
 }
 
 export function validateQuery(value: string): QueryValidationResult {
