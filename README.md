@@ -8,7 +8,8 @@ A structured intelligence system for analyzing and comparing crypto assets — b
 
 ## Preview
 
-! [App Screenshot] <img width="1362" height="665" alt="screenshot" src="https://github.com/user-attachments/assets/b16b4e84-26cb-4604-a879-2737b3cfe50c" />
+! [App Screenshot] <img width="1363" height="590" alt="screenshot" src="https://github.com/user-attachments/assets/82b0f937-9df7-4273-8171-c5b900d7f6fa" />
+
 
 ---
 
