@@ -178,8 +178,7 @@ function App() {
       <section className="hero dashboard-hero-shell">
         <div className="hero-top dashboard-hero-shell-top">
           <div>
-            <p className="dashboard-kicker">Premium dark intelligence dashboard</p>
-            <h1>Crypto Intelligence & Risk Assistant</h1>
+            <h1>Token Intel</h1>
           </div>
 
           <button type="button" className="theme-toggle-fancy" onClick={toggleTheme} aria-label="Toggle color theme">
