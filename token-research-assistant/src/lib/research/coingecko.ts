@@ -7,6 +7,7 @@ import { getSectorIntelligence } from '../../utils/getSectorIntelligence';
 import { isEthereumContractAddress } from './query';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+const CONTRACT_LOOKUP_CHAINS = ['ethereum', 'binance-smart-chain', 'polygon-pos', 'arbitrum-one', 'avalanche'] as const;
 
 type CoinGeckoSearchResponse = {
   coins?: Array<{
@@ -206,6 +207,7 @@ export async function getCoinGeckoResearchResponse(query: { raw: string; normali
       attempted: true;
       url: string;
       address: string;
+      chain: string;
       status: number;
       responseText: string;
     };
@@ -213,42 +215,49 @@ export async function getCoinGeckoResearchResponse(query: { raw: string; normali
 
   if (isEthereumContractAddress(query.raw)) {
     const contractAddress = query.raw.trim().toLowerCase();
-    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
 
-    try {
-      const contractResponse = await fetch(contractUrl, {
-        headers: {
-          accept: 'application/json'
-        }
-      });
+    for (const chain of CONTRACT_LOOKUP_CHAINS) {
+      const contractUrl = `${COINGECKO_BASE_URL}/coins/${chain}/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
 
-      if (!contractResponse.ok) {
-        const responseText = await contractResponse.text();
-        const error = new Error(`CoinGecko contract lookup failed with status ${contractResponse.status}`) as Error & {
-          status?: number;
-          contractLookup?: {
-            attempted: true;
-            url: string;
-            address: string;
-            status: number;
-            responseText: string;
+      try {
+        const contractResponse = await fetch(contractUrl, {
+          headers: {
+            accept: 'application/json'
+          }
+        });
+
+        if (!contractResponse.ok) {
+          const responseText = await contractResponse.text();
+          const error = new Error(`CoinGecko contract lookup failed on ${chain} with status ${contractResponse.status}`) as Error & {
+            status?: number;
+            contractLookup?: {
+              attempted: true;
+              url: string;
+              address: string;
+              chain: string;
+              status: number;
+              responseText: string;
+            };
           };
-        };
-        error.status = contractResponse.status;
-        error.contractLookup = {
-          attempted: true,
-          url: contractUrl,
-          address: contractAddress,
-          status: contractResponse.status,
-          responseText
-        };
-        throw error;
-      }
+          error.status = contractResponse.status;
+          error.contractLookup = {
+            attempted: true,
+            url: contractUrl,
+            address: contractAddress,
+            chain,
+            status: contractResponse.status,
+            responseText
+          };
+          throw error;
+        }
 
-      const contractData = (await contractResponse.json()) as CoinGeckoCoinResponse;
-      return buildLiveResponse(query, contractData);
-    } catch (error) {
-      contractLookupError = error as typeof contractLookupError;
+        const contractData = (await contractResponse.json()) as CoinGeckoCoinResponse;
+        console.info(`[coingecko] Contract lookup succeeded on chain: ${chain}`);
+        return buildLiveResponse(query, contractData);
+      } catch (error) {
+        contractLookupError = error as typeof contractLookupError;
+        console.warn(`[coingecko] Contract lookup failed on chain: ${chain}`, error);
+      }
     }
   }
 

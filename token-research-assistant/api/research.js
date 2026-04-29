@@ -8,6 +8,7 @@ const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
 const ETHEREUM_CONTRACT_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+const CONTRACT_LOOKUP_CHAINS = ['ethereum', 'binance-smart-chain', 'polygon-pos', 'arbitrum-one', 'avalanche'];
 
 const researchProfiles = [
   {
@@ -488,31 +489,37 @@ async function getCoinGeckoResearchResponse(query) {
 
   if (isEthereumContractAddress(query.raw)) {
     const contractAddress = query.raw.trim().toLowerCase();
-    const contractUrl = `${COINGECKO_BASE_URL}/coins/ethereum/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
 
-    try {
-      const contractResponse = await fetch(contractUrl, {
-        headers: { accept: 'application/json' }
-      });
+    for (const chain of CONTRACT_LOOKUP_CHAINS) {
+      const contractUrl = `${COINGECKO_BASE_URL}/coins/${chain}/contract/${encodeURIComponent(contractAddress)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
 
-      if (!contractResponse.ok) {
-        const responseText = await contractResponse.text();
-        const error = new Error(`CoinGecko contract lookup failed with status ${contractResponse.status}`);
-        error.status = contractResponse.status;
-        error.contractLookup = {
-          attempted: true,
-          url: contractUrl,
-          address: contractAddress,
-          status: contractResponse.status,
-          responseText
-        };
-        throw error;
+      try {
+        const contractResponse = await fetch(contractUrl, {
+          headers: { accept: 'application/json' }
+        });
+
+        if (!contractResponse.ok) {
+          const responseText = await contractResponse.text();
+          const error = new Error(`CoinGecko contract lookup failed on ${chain} with status ${contractResponse.status}`);
+          error.status = contractResponse.status;
+          error.contractLookup = {
+            attempted: true,
+            url: contractUrl,
+            address: contractAddress,
+            chain,
+            status: contractResponse.status,
+            responseText
+          };
+          throw error;
+        }
+
+        const contractData = await contractResponse.json();
+        console.info(`[coingecko] Contract lookup succeeded on chain: ${chain}`);
+        return buildLiveResearchResponse(query, contractData);
+      } catch (error) {
+        contractLookupError = error;
+        console.warn(`[coingecko] Contract lookup failed on chain: ${chain}`, error);
       }
-
-      const contractData = await contractResponse.json();
-      return buildLiveResearchResponse(query, contractData);
-    } catch (error) {
-      contractLookupError = error;
     }
   }
 
