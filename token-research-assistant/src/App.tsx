@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TokenForm } from './components/TokenForm';
+import { SearchBar } from './components/SearchBar';
 import { ResearchNote } from './components/ResearchNote';
 import { LoadingState } from './components/LoadingState';
 import { ModeToggle } from './components/ModeToggle';
@@ -14,8 +14,6 @@ import { mapResearchResponseToNote } from './utils/mapResearchResponseToNote';
 
 const quickSamples = ['Bitcoin', 'Ethereum', 'Solana', 'Chainlink', 'Uniswap'];
 
-type ThemeMode = 'dark' | 'light';
-
 function App() {
   const [mode, setMode] = useState<'single' | 'compare'>('single');
   const [query, setQuery] = useState('');
@@ -27,11 +25,7 @@ function App() {
   const [compareResult, setCompareResult] = useState<CompareResponse | null>(null);
   const [compareUiState, setCompareUiState] = useState<CompareUiState | null>(null);
   const [compareError, setCompareError] = useState('');
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    if (typeof window === 'undefined') return 'dark';
-    const stored = window.localStorage.getItem('theme');
-    return stored === 'light' ? 'light' : 'dark';
-  });
+  const [theme] = useState<'dark'>('dark');
 
   const handleChange = (value: string) => {
     setQuery(value);
@@ -163,10 +157,6 @@ function App() {
     window.localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
-  };
-
   const hasActiveState = Boolean(query.trim() || note || error || uiState);
   const isLoading = uiState?.type === 'loading';
   const isNotFound = uiState?.type === 'not_found';
@@ -177,15 +167,15 @@ function App() {
 
   return (
     <main className="page">
-      <section className="hero">
-        <div className="hero-top">
-          <h1>Token Research Assistant</h1>
-          <button type="button" className="secondary-button theme-toggle-button" onClick={toggleTheme}>
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
+      <section className="hero dashboard-hero-shell">
+        <div className="hero-top dashboard-hero-shell-top">
+          <div>
+            <p className="dashboard-kicker">Premium dark intelligence dashboard</p>
+            <h1>Crypto Intelligence & Risk Assistant</h1>
+          </div>
         </div>
-        <p className="subtitle">
-          Enter a token or project name and get a short research note with live CoinGecko data when available and local fallback support when it is not.
+        <p className="subtitle dashboard-subtitle">
+          Search a token, symbol, or supported contract address to see live market context, risk framing, research synthesis, and sector intelligence in one clean dashboard.
         </p>
       </section>
 
@@ -193,7 +183,7 @@ function App() {
 
       {mode === 'single' ? (
         <>
-          <TokenForm
+          <SearchBar
             value={query}
             onChange={handleChange}
             onSubmit={() => void handleGenerate()}
@@ -274,7 +264,7 @@ function App() {
                   <h2>Unable to fetch research right now</h2>
                 </div>
               </div>
-              <p className="state-copy">{uiState.message}</p>
+              <p className="state-copy">Unable to fetch live data. Showing fallback analysis.</p>
             </section>
           ) : null}
 
