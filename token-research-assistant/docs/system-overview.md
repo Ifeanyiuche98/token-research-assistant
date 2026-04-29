@@ -1,4 +1,4 @@
-# Token Research Assistant  
+# Token Intel  
 ## System Overview  
 
 **Version:** v1.1  
@@ -8,7 +8,7 @@
 
 ## 1. Product Summary
 
-Token Research Assistant is a web-based crypto research and comparison tool designed to help users understand digital assets through structured, deterministic market intelligence rather than speculative hype or scattered information.
+Token Intel is a web-based crypto research and comparison tool designed to help users understand digital assets through structured, deterministic market intelligence rather than speculative hype or scattered information.
 
 It enables users to search for a single token or project and compare two tokens side by side through reviewing market structure, risk, sector context, and signal interpretation all in one place.
 
@@ -38,7 +38,7 @@ As a result, decision-making is often:
 
 ## 3. Solution
 
-Token Research Assistant solves this by turning live market data into structured, readable research output.
+Token Intel solves this by turning live market data into structured, readable research output.
 
 Instead of showing only raw numbers, the system organizes token analysis into clear layers such as:
 - Market snapshot  

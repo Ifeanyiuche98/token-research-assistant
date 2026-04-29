@@ -61,7 +61,7 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
       <section className={`card dashboard-hero-card ${note.isFallback ? 'dashboard-hero-card-fallback' : ''}`}>
         <div className="dashboard-hero-top">
           <div>
-            <p className="dashboard-kicker">Crypto intelligence & risk assistant</p>
+            <p className="dashboard-kicker">Token intelligence dashboard</p>
             <h2 className="dashboard-result-title">{resultName}</h2>
             <p className="dashboard-result-subtitle">
               {resultSymbol ? `${resultSymbol} · ` : ''}
