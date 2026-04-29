@@ -25,7 +25,11 @@ function App() {
   const [compareResult, setCompareResult] = useState<CompareResponse | null>(null);
   const [compareUiState, setCompareUiState] = useState<CompareUiState | null>(null);
   const [compareError, setCompareError] = useState('');
-  const [theme] = useState<'dark'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    const stored = window.localStorage.getItem('theme');
+    return stored === 'light' ? 'light' : 'dark';
+  });
 
   const handleChange = (value: string) => {
     setQuery(value);
@@ -157,6 +161,10 @@ function App() {
     window.localStorage.setItem('theme', theme);
   }, [theme]);
 
+  const toggleTheme = () => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+  };
+
   const hasActiveState = Boolean(query.trim() || note || error || uiState);
   const isLoading = uiState?.type === 'loading';
   const isNotFound = uiState?.type === 'not_found';
@@ -173,6 +181,14 @@ function App() {
             <p className="dashboard-kicker">Premium dark intelligence dashboard</p>
             <h1>Crypto Intelligence & Risk Assistant</h1>
           </div>
+
+          <button type="button" className="theme-toggle-fancy" onClick={toggleTheme} aria-label="Toggle color theme">
+            <span className="theme-toggle-track">
+              <span className={`theme-toggle-thumb theme-toggle-thumb-${theme}`} />
+              <span className={`theme-toggle-label ${theme === 'dark' ? 'theme-toggle-label-active' : ''}`}>🌙 Dark</span>
+              <span className={`theme-toggle-label ${theme === 'light' ? 'theme-toggle-label-active' : ''}`}>☀️ Light</span>
+            </span>
+          </button>
         </div>
         <p className="subtitle dashboard-subtitle">
           Search a token, symbol, or supported contract address to see live market context, risk framing, research synthesis, and sector intelligence in one clean dashboard.
