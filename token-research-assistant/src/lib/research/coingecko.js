@@ -89,13 +89,13 @@ function buildDexResponse(query, contractAddress, pair) {
     const telegram = cleanUrlList(socials.filter((social) => social.type === 'telegram').map((social) => social.url));
     const market = {
         priceUsd: toNumber(pair.priceUsd),
-        marketCapUsd: toNumber(pair.fdv),
+        marketCapUsd: null,
         fullyDilutedValuationUsd: toNumber(pair.fdv),
         volume24hUsd: toNumber(pair.volume?.h24),
         liquidityUsd: toNumber(pair.liquidity?.usd),
         change24hPct: toNumber(pair.priceChange?.h24),
         marketCapRank: null,
-        lastUpdated: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).toISOString() : new Date().toISOString()
+        lastUpdated: null
     };
     const description = `${pair.baseToken?.name ?? query.raw} is being sourced from DEX liquidity pool data via DEXScreener. Treat this as limited-verification market context and verify the contract before interacting.`;
     const project = {
@@ -111,18 +111,24 @@ function buildDexResponse(query, contractAddress, pair) {
     const risk = {
         level: 'unknown',
         score: null,
-        summary: 'Risk scoring is limited because this token was sourced from DEX liquidity data without CoinGecko verification.',
+        summary: 'Risk scoring is limited because this token was sourced from DEX liquidity data without CoinGecko verification, and market cap is unavailable outside FDV estimates.',
         signals: [
             {
                 key: 'missing_market_data',
                 label: 'Verification status',
                 value: 'DEX-only token — verify contract before interacting',
                 impact: 'medium'
+            },
+            {
+                key: 'missing_market_data',
+                label: 'Market cap coverage',
+                value: 'Market cap unavailable; FDV shown separately when present',
+                impact: 'medium'
             }
         ]
     };
     const signalInterpretation = {
-        summary: 'Token sourced from DEX liquidity pools. Verify the contract and liquidity conditions before interacting.',
+        summary: 'Token sourced from DEX liquidity pools. Verify the contract and liquidity conditions before interacting, and treat FDV separately from market cap.',
         tone: 'neutral',
         signals: [
             {
@@ -130,12 +136,18 @@ function buildDexResponse(query, contractAddress, pair) {
                 label: 'DEX-only source',
                 detail: 'This result comes from DEXScreener fallback data rather than the verified CoinGecko contract pipeline.',
                 tone: 'neutral'
+            },
+            {
+                key: 'missing_data',
+                label: 'Valuation context',
+                detail: 'Market cap is left blank for DEX fallback results; only FDV is shown when available from DEXScreener.',
+                tone: 'neutral'
             }
         ]
     };
     const researchBrief = {
         headline: `${pair.baseToken?.name ?? query.raw} DEX market snapshot`,
-        body: `${pair.baseToken?.name ?? query.raw} was resolved from DEX liquidity pool data, so treat the market snapshot as exploratory and verify the contract before interacting.`
+        body: `${pair.baseToken?.name ?? query.raw} was resolved from DEX liquidity pool data, so treat the market snapshot as exploratory, verify the contract before interacting, and read valuation figures as FDV rather than confirmed market cap.`
     };
     const sector = mapToSector(project.categories, pair.baseToken?.name ?? query.raw, project.description);
     const sectorIntelligence = getSectorIntelligence(sector);

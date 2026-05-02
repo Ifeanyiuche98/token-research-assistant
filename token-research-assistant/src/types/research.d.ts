@@ -95,7 +95,7 @@ export type ResearchResult = {
     };
     fallback: {
         used: boolean;
-        reason: 'none' | 'live_lookup_failed' | 'not_listed' | 'rate_limited';
+        reason: 'none' | 'live_lookup_failed' | 'not_listed' | 'not_found' | 'rate_limited' | 'upstream_unavailable';
         localNoteId: string | null;
     };
     sourceMeta: {
