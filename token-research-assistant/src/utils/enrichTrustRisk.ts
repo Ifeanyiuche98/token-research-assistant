@@ -131,6 +131,12 @@ function buildSummary(baseSummary: string, flags: string[]) {
   return `${baseSummary} Trust-layer signals: ${flags.join('; ')}.`;
 }
 
+function pushUniqueFlag(flags: string[], value: string) {
+  if (!flags.includes(value)) {
+    flags.push(value);
+  }
+}
+
 export async function enrichTrustRisk(response: ResearchResponse): Promise<ResearchResponse> {
   if (!response?.result || response.result.identity.source === 'local') {
     return response;
@@ -165,34 +171,39 @@ export async function enrichTrustRisk(response: ResearchResponse): Promise<Resea
   const riskSignals = [...baseRisk.signals];
   const interpretedSignals = [...baseSignalInterpretation.signals];
 
+  pushUniqueFlag(flags, 'Risk signals are heuristic — not financial advice');
+  if (response.result.identity.source === 'dexscreener') {
+    pushUniqueFlag(flags, 'Unverified token — always confirm contract authenticity');
+  }
+
   if (honeypot === true) {
-    flags.push('Honeypot risk detected');
+    pushUniqueFlag(flags, 'Honeypot risk detected');
     riskSignals.push(createRiskSignal('honeypot', 'Honeypot check', 'Token appears to restrict selling or transfer exits.', 'high'));
     interpretedSignals.push(createInterpretedSignal('trust', 'Honeypot warning', 'Honeypot detection flagged this contract as risky to exit.', 'negative'));
   }
 
   if (liquidityRisk === 'high') {
-    flags.push('Low liquidity — high volatility risk');
+    pushUniqueFlag(flags, 'Low liquidity — high volatility risk');
     riskSignals.push(createRiskSignal('low_liquidity', 'Liquidity depth', 'Liquidity is below $10k.', 'high'));
     interpretedSignals.push(createInterpretedSignal('trust', 'Low-liquidity warning', 'Liquidity is thin, which raises slippage and volatility risk.', 'negative'));
   } else if (liquidityRisk === 'medium') {
-    flags.push('Moderate liquidity — trading conditions can move quickly');
+    pushUniqueFlag(flags, 'Moderate liquidity — trading conditions can move quickly');
     riskSignals.push(createRiskSignal('low_liquidity', 'Liquidity depth', 'Liquidity is between $10k and $100k.', 'medium'));
     interpretedSignals.push(createInterpretedSignal('trust', 'Moderate-liquidity caution', 'Liquidity is present but still light enough for trading conditions to shift quickly.', 'caution'));
   }
 
   if (volumeAnomaly === true) {
-    flags.push('Unusual trading activity detected');
+    pushUniqueFlag(flags, 'Unusual trading activity detected');
     riskSignals.push(createRiskSignal('volume_anomaly', 'Volume anomaly', '24h volume is more than 3x liquidity.', 'medium'));
     interpretedSignals.push(createInterpretedSignal('trust', 'Volume anomaly', 'Trading activity looks unusually high relative to available liquidity.', 'caution'));
   }
 
   if (ageRisk === 'high') {
-    flags.push('New contract — limited history');
+    pushUniqueFlag(flags, 'New contract — limited history');
     riskSignals.push(createRiskSignal('age_risk', 'Market age', 'Token listing or pair appears younger than 7 days.', 'high'));
     interpretedSignals.push(createInterpretedSignal('trust', 'New-market warning', 'This token appears very new, so its market history is still limited.', 'negative'));
   } else if (ageRisk === 'medium') {
-    flags.push('Young contract — limited history');
+    pushUniqueFlag(flags, 'Young contract — limited history');
     riskSignals.push(createRiskSignal('age_risk', 'Market age', 'Token listing or pair appears between 7 and 30 days old.', 'medium'));
     interpretedSignals.push(createInterpretedSignal('trust', 'Young-market caution', 'This token still has a relatively short live-market history.', 'caution'));
   }
@@ -201,7 +212,7 @@ export async function enrichTrustRisk(response: ResearchResponse): Promise<Resea
     const taxParts = [];
     if (buyTax !== null) taxParts.push(`buy tax ${buyTax.toFixed(2)}%`);
     if (sellTax !== null) taxParts.push(`sell tax ${sellTax.toFixed(2)}%`);
-    flags.push(`Trade tax data available: ${taxParts.join(', ')}`);
+    pushUniqueFlag(flags, `Trade tax data available: ${taxParts.join(', ')}`);
   }
 
   response.result.risk = {

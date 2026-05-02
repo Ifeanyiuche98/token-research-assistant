@@ -188,6 +188,8 @@ test('DEX-only contract falls back to DEXScreener and adds trust-layer warnings'
     assert.equal(response.body.result?.risk?.details?.volumeAnomaly, true);
     assert.equal(response.body.result?.risk?.details?.ageRisk, 'high');
     assert.equal(response.body.result?.risk?.details?.trustLabel, 'danger');
+    assert.ok(response.body.result?.risk?.flags?.includes('Risk signals are heuristic — not financial advice'));
+    assert.ok(response.body.result?.risk?.flags?.includes('Unverified token — always confirm contract authenticity'));
   });
 });
 
