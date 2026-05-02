@@ -53,6 +53,7 @@ type CoinGeckoCoinResponse = {
   last_updated?: string;
   sentiment_votes_up_percentage?: number;
   sentiment_votes_down_percentage?: number;
+  genesis_date?: string;
 };
 
 type DexScreenerPair = {
@@ -302,7 +303,8 @@ function buildDexResponse(query: { raw: string; normalized: string }, contractAd
         primarySource: 'dexscreener',
         fetchedAt: new Date().toISOString(),
         liveAttempted: true,
-        liveSucceeded: true
+        liveSucceeded: true,
+        assetCreatedAt: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).toISOString() : null
       }
     },
     message: 'Live research data retrieved successfully via DEXScreener fallback.',
@@ -393,7 +395,8 @@ function buildLiveResponse(query: { raw: string; normalized: string }, coin: Coi
       primarySource: 'coingecko',
       fetchedAt: new Date().toISOString(),
       liveAttempted: true,
-      liveSucceeded: true
+      liveSucceeded: true,
+      assetCreatedAt: coin.genesis_date ?? null
     }
   };
 

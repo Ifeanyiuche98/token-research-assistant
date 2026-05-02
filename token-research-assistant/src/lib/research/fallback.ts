@@ -99,7 +99,8 @@ export function getFallbackResearchResponse(query: { raw: string; normalized: st
       primarySource: 'local',
       fetchedAt: new Date().toISOString(),
       liveAttempted: true,
-      liveSucceeded: false
+      liveSucceeded: false,
+      assetCreatedAt: null
     }
   };
 

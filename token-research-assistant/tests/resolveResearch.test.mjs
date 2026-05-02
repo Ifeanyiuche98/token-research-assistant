@@ -86,7 +86,7 @@ test('symbol lookup stays on CoinGecko', async () => {
   });
 });
 
-test('supported contract stays on CoinGecko', async () => {
+test('supported contract stays on CoinGecko and gets low trust risk signals', async () => {
   const contract = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 
   await withMockFetch((url) => {
@@ -97,6 +97,7 @@ test('supported contract stays on CoinGecko', async () => {
         symbol: 'usdt',
         categories: ['stablecoin'],
         description: { en: 'Tether description' },
+        genesis_date: '2014-10-06',
         market_data: {
           current_price: { usd: 1 },
           market_cap: { usd: 100000000000 },
@@ -110,6 +111,13 @@ test('supported contract stays on CoinGecko', async () => {
       });
     }
 
+    if (url.includes(`https://api.honeypot.is/v2/IsHoneypot?address=${encodeURIComponent(contract)}`)) {
+      return jsonResponse(200, {
+        honeypotResult: { isHoneypot: false },
+        simulationResult: { buyTax: 0, sellTax: 0 }
+      });
+    }
+
     throw new Error(`Unexpected URL: ${url}`);
   }, async () => {
     const response = await callResearch(contract);
@@ -117,10 +125,12 @@ test('supported contract stays on CoinGecko', async () => {
     assert.equal(response.body.result?.identity.source, 'coingecko');
     assert.equal(response.body.result?.identity.symbol, 'USDT');
     assert.equal(response.body.result?.fallback.used, false);
+    assert.equal(response.body.result?.risk?.details?.honeypot, false);
+    assert.equal(response.body.result?.risk?.details?.trustLabel, 'safe');
   });
 });
 
-test('DEX-only contract falls back to DEXScreener with market cap left null', async () => {
+test('DEX-only contract falls back to DEXScreener and adds trust-layer warnings', async () => {
   const contract = '0x5B5dee44552546ECEA05EDeA01DCD7Be7aa6144A';
 
   await withMockFetch((url) => {
@@ -145,8 +155,9 @@ test('DEX-only contract falls back to DEXScreener with market cap left null', as
             priceUsd: '0.02',
             fdv: 654321,
             liquidity: { usd: 5000 },
-            volume: { h24: 2000 },
+            volume: { h24: 20000 },
             priceChange: { h24: 8 },
+            pairCreatedAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
             baseToken: { name: 'Test Dex Token', symbol: 'tdt' },
             info: {
               websites: [{ url: 'https://example.com' }],
@@ -154,6 +165,13 @@ test('DEX-only contract falls back to DEXScreener with market cap left null', as
             }
           }
         ]
+      });
+    }
+
+    if (url.includes(`https://api.honeypot.is/v2/IsHoneypot?address=${encodeURIComponent(contract)}`)) {
+      return jsonResponse(200, {
+        honeypotResult: { isHoneypot: false },
+        simulationResult: { buyTax: 2, sellTax: 4 }
       });
     }
 
@@ -166,6 +184,53 @@ test('DEX-only contract falls back to DEXScreener with market cap left null', as
     assert.equal(response.body.result?.market.marketCapUsd, null);
     assert.equal(response.body.result?.market.fullyDilutedValuationUsd, 654321);
     assert.equal(response.body.result?.market.liquidityUsd, 5000);
+    assert.equal(response.body.result?.risk?.details?.liquidityRisk, 'high');
+    assert.equal(response.body.result?.risk?.details?.volumeAnomaly, true);
+    assert.equal(response.body.result?.risk?.details?.ageRisk, 'high');
+    assert.equal(response.body.result?.risk?.details?.trustLabel, 'danger');
+  });
+});
+
+test('honeypot-positive contract is marked as danger without breaking the response', async () => {
+  const contract = '0x0000000000000000000000000000000000000009';
+
+  await withMockFetch((url) => {
+    if (CONTRACT_CHAINS.some((chain) => url.includes(`/coins/${chain}/contract/${encodeURIComponent(contract.toLowerCase())}`))) {
+      return jsonResponse(404, { error: 'coin not found' });
+    }
+
+    if (url.includes(`https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(contract.toLowerCase())}`)) {
+      return jsonResponse(200, {
+        pairs: [
+          {
+            pairAddress: '0xpair-honey',
+            priceUsd: '0.0001',
+            fdv: 100000,
+            liquidity: { usd: 1500 },
+            volume: { h24: 9000 },
+            pairCreatedAt: Date.now() - 24 * 60 * 60 * 1000,
+            baseToken: { name: 'Honey Trap', symbol: 'HNY' }
+          }
+        ]
+      });
+    }
+
+    if (url.includes(`https://api.honeypot.is/v2/IsHoneypot?address=${encodeURIComponent(contract)}`)) {
+      return jsonResponse(200, {
+        honeypotResult: { isHoneypot: true },
+        simulationResult: { buyTax: 15, sellTax: 35 }
+      });
+    }
+
+    throw new Error(`Unexpected URL: ${url}`);
+  }, async () => {
+    const response = await callResearch(contract);
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.result?.identity.source, 'dexscreener');
+    assert.equal(response.body.result?.risk?.details?.honeypot, true);
+    assert.equal(response.body.result?.risk?.details?.trustLabel, 'danger');
+    assert.equal(response.body.result?.risk?.level, 'high');
+    assert.match(response.body.result?.risk?.summary ?? '', /Honeypot risk detected/);
   });
 });
 

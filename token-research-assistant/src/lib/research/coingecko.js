@@ -195,7 +195,8 @@ function buildDexResponse(query, contractAddress, pair) {
                 primarySource: 'dexscreener',
                 fetchedAt: new Date().toISOString(),
                 liveAttempted: true,
-                liveSucceeded: true
+                liveSucceeded: true,
+                assetCreatedAt: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).toISOString() : null
             }
         },
         message: 'Live research data retrieved successfully via DEXScreener fallback.',
@@ -282,7 +283,8 @@ function buildLiveResponse(query, coin) {
             primarySource: 'coingecko',
             fetchedAt: new Date().toISOString(),
             liveAttempted: true,
-            liveSucceeded: true
+            liveSucceeded: true,
+            assetCreatedAt: coin.genesis_date ?? null
         }
     };
     return {

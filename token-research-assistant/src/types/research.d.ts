@@ -11,20 +11,33 @@ export type ResearchNote = {
 export type ResearchStatus = 'live' | 'fallback' | 'not_found' | 'error';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'unknown';
 export type RiskSignal = {
-    key: 'missing_market_data' | 'low_volume' | 'high_24h_move' | 'small_market_cap' | 'fdv_gap';
+    key: 'missing_market_data' | 'low_volume' | 'high_24h_move' | 'small_market_cap' | 'fdv_gap' | 'honeypot' | 'low_liquidity' | 'volume_anomaly' | 'age_risk';
     label: string;
     value: string;
     impact: 'low' | 'medium' | 'high';
 };
+export type TrustRiskBand = 'low' | 'medium' | 'high' | null;
+export type TrustRiskLabel = 'safe' | 'warning' | 'danger' | null;
 export type RiskAnalysis = {
     level: RiskLevel;
     score: number | null;
     summary: string;
     signals: RiskSignal[];
+    flags?: string[];
+    details?: {
+        honeypot: boolean | null;
+        buyTax: number | null;
+        sellTax: number | null;
+        liquidityRisk: TrustRiskBand;
+        volumeAnomaly: boolean | null;
+        ageRisk: TrustRiskBand;
+        trustLabel: TrustRiskLabel;
+        trustScore: number | null;
+    };
 };
 export type SignalTone = 'positive' | 'caution' | 'negative' | 'neutral';
 export type InterpretedSignal = {
-    key: 'liquidity' | 'volatility' | 'market_cap' | 'fdv_gap' | 'rank' | 'missing_data';
+    key: 'liquidity' | 'volatility' | 'market_cap' | 'fdv_gap' | 'rank' | 'missing_data' | 'trust';
     label: string;
     detail: string;
     tone: SignalTone;
@@ -103,6 +116,7 @@ export type ResearchResult = {
         fetchedAt: string;
         liveAttempted: boolean;
         liveSucceeded: boolean;
+        assetCreatedAt?: string | null;
     };
 };
 export type ResearchError = {

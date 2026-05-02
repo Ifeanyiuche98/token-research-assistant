@@ -95,7 +95,8 @@ export function getFallbackResearchResponse(query) {
             primarySource: 'local',
             fetchedAt: new Date().toISOString(),
             liveAttempted: true,
-            liveSucceeded: false
+            liveSucceeded: false,
+            assetCreatedAt: null
         }
     };
     return {

@@ -3,6 +3,7 @@ import { generateSignalInterpretation } from '../src/utils/generateSignalInterpr
 import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
 import { mapToSector } from '../src/utils/mapToSector.js';
 import { getSectorIntelligence } from '../src/utils/getSectorIntelligence.js';
+import { enrichTrustRisk } from '../src/utils/enrichTrustRisk.js';
 
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 100;
@@ -350,7 +351,8 @@ function buildFallbackResearchResponse(query, reason = 'not_listed', message = '
         primarySource: 'local',
         fetchedAt: new Date().toISOString(),
         liveAttempted: true,
-        liveSucceeded: false
+        liveSucceeded: false,
+        assetCreatedAt: null
       }
     },
     message,
@@ -575,7 +577,8 @@ function buildDexResearchResponse(query, contractAddress, pair) {
         primarySource: 'dexscreener',
         fetchedAt: new Date().toISOString(),
         liveAttempted: true,
-        liveSucceeded: true
+        liveSucceeded: true,
+        assetCreatedAt: pair?.pairCreatedAt ? new Date(pair.pairCreatedAt).toISOString() : null
       }
     },
     message: 'Live research data retrieved successfully via DEXScreener fallback.',
@@ -668,7 +671,8 @@ function buildLiveResearchResponse(query, coin) {
         primarySource: 'coingecko',
         fetchedAt: new Date().toISOString(),
         liveAttempted: true,
-        liveSucceeded: true
+        liveSucceeded: true,
+        assetCreatedAt: coin?.genesis_date ?? null
       }
     },
     message: 'Live research data retrieved successfully.',
@@ -801,7 +805,11 @@ export default async function handler(req, res) {
   try {
     const queryValue = typeof req.query?.q === 'string' ? req.query.q : '';
     const { statusCode, body } = await resolveResearch(queryValue);
-    return json(res, statusCode, ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body))))));
+    const normalizedBody = ensureSectorIntelligenceOnResponse(
+      ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(body))))
+    );
+    const enrichedBody = await enrichTrustRisk(normalizedBody);
+    return json(res, statusCode, enrichedBody);
   } catch (error) {
     return json(res, 500, {
       status: 'error',
