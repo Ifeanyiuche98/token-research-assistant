@@ -691,15 +691,59 @@ h3 {
   gap: 18px;
 }
 
+.risk-card-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.risk-card-shell::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% -35% auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, currentColor 0%, transparent 65%);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.risk-card-score-row-upgraded {
+  align-items: stretch;
+  margin-top: 6px;
+}
+
+.risk-card-score-copy {
+  flex: 1 1 0;
+}
+
+.risk-card-score-label,
+.risk-detail-label,
+.risk-details-toggle-meta {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
 .risk-card-score {
   font-size: 2rem;
   font-weight: 700;
+}
+
+.risk-card-score-upgraded {
+  margin-bottom: 10px;
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  letter-spacing: -0.04em;
 }
 
 .risk-card-score span {
   color: var(--text-muted);
   font-size: 1rem;
   font-weight: 500;
+}
+
+.risk-card-summary-upgraded {
+  max-width: 44ch;
+  line-height: 1.65;
 }
 
 .risk-card-ring {
@@ -717,6 +761,27 @@ h3 {
   font-weight: 700;
 }
 
+.risk-card-ring-upgraded {
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+  align-self: center;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 0 30px color-mix(in srgb, currentColor 28%, transparent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: riskPulseIn 0.7s ease;
+}
+
+.risk-card-ring-upgraded span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 68px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .risk-card-bar-shell {
   margin-top: 16px;
   height: 10px;
@@ -729,6 +794,203 @@ h3 {
   height: 100%;
   border-radius: inherit;
   background: currentColor;
+  transition: width 0.6s ease;
+}
+
+.risk-card-badge {
+  font-weight: 700;
+}
+
+.risk-visual-safe {
+  color: #22c55e;
+}
+
+.risk-visual-warning {
+  color: #f59e0b;
+}
+
+.risk-visual-danger {
+  color: #ef4444;
+}
+
+.risk-visual-unknown {
+  color: var(--text-soft);
+}
+
+.risk-flag-list,
+.risk-disclaimer-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.risk-flag-list {
+  margin-top: 18px;
+}
+
+.risk-flag-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 84%, transparent);
+  color: var(--text);
+}
+
+.risk-flag-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-top: 0.45rem;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.risk-flag-danger {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.risk-flag-warning {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.risk-flag-neutral {
+  color: var(--text-muted);
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.risk-details-shell {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.risk-details-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 600;
+}
+
+.risk-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.risk-detail-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+}
+
+.risk-detail-value {
+  margin: 8px 0 0;
+  font-weight: 700;
+}
+
+.risk-detail-safe {
+  color: #22c55e;
+}
+
+.risk-detail-warning {
+  color: #f59e0b;
+}
+
+.risk-detail-danger {
+  color: #ef4444;
+}
+
+.risk-detail-neutral {
+  color: var(--text);
+}
+
+.risk-disclaimer-stack {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.risk-disclaimer,
+.risk-card-empty-copy {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.risk-card-empty-state {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0 2px;
+}
+
+.risk-card-empty-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.risk-skeleton-card {
+  min-height: 260px;
+}
+
+.risk-skeleton-top,
+.risk-skeleton-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.risk-skeleton-badge,
+.risk-skeleton-ring {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(31, 41, 55, 0.9), rgba(55, 65, 81, 0.9), rgba(31, 41, 55, 0.9));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+.risk-skeleton-badge {
+  width: 96px;
+  height: 32px;
+}
+
+.risk-skeleton-main {
+  margin: 20px 0 16px;
+  align-items: flex-start;
+}
+
+.risk-skeleton-ring {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.risk-skeleton-copy {
+  flex: 1 1 0;
+}
+
+.risk-skeleton-flags {
+  margin-top: 10px;
+}
+
+.risk-skeleton-flags .dashboard-skeleton-line:last-child {
+  margin-bottom: 0;
 }
 
 .dashboard-list-positive li::marker {
@@ -937,6 +1199,18 @@ h3 {
   }
 }
 
+
+@keyframes riskPulseIn {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 960px) {
   .dashboard-grid,
   .market-card-grid,
@@ -957,6 +1231,10 @@ h3 {
   .dashboard-search-row,
   .form-row {
     flex-wrap: wrap;
+  }
+
+  .risk-details-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -979,9 +1257,17 @@ h3 {
   .risk-card-score-row,
   .dashboard-hero-top,
   .market-card-price-row,
-  .comparison-token-top {
+  .comparison-token-top,
+  .risk-details-toggle,
+  .risk-skeleton-main {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .risk-card-ring-upgraded,
+  .risk-skeleton-ring {
+    width: 108px;
+    height: 108px;
   }
 
   .dashboard-search-input,
@@ -995,5 +1281,17 @@ h3 {
 
   .theme-toggle-track {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .risk-card-ring-upgraded,
+  .risk-card-bar,
+  .risk-skeleton-badge,
+  .risk-skeleton-ring,
+  .dashboard-skeleton-line,
+  .dashboard-skeleton-block {
+    animation: none;
+    transition: none;
   }
 }

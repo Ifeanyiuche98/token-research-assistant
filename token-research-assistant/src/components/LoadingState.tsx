@@ -16,6 +16,30 @@ function SkeletonCard() {
   );
 }
 
+function RiskSkeletonCard() {
+  return (
+    <div className="dashboard-skeleton-card risk-skeleton-card" aria-hidden="true">
+      <div className="risk-skeleton-top">
+        <div className="dashboard-skeleton-line dashboard-skeleton-line-short" />
+        <div className="risk-skeleton-badge" />
+      </div>
+      <div className="risk-skeleton-main">
+        <div className="risk-skeleton-ring" />
+        <div className="risk-skeleton-copy">
+          <div className="dashboard-skeleton-line dashboard-skeleton-line-short" />
+          <div className="dashboard-skeleton-line" />
+          <div className="dashboard-skeleton-line dashboard-skeleton-line-medium" />
+        </div>
+      </div>
+      <div className="risk-skeleton-flags">
+        <div className="dashboard-skeleton-line" />
+        <div className="dashboard-skeleton-line dashboard-skeleton-line-medium" />
+        <div className="dashboard-skeleton-line dashboard-skeleton-line-short" />
+      </div>
+    </div>
+  );
+}
+
 export function LoadingState({ query }: LoadingStateProps) {
   return (
     <section className="dashboard-loading card" aria-live="polite">
@@ -29,7 +53,7 @@ export function LoadingState({ query }: LoadingStateProps) {
 
       <div className="dashboard-loading-grid">
         <SkeletonCard />
-        <SkeletonCard />
+        <RiskSkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
       </div>
