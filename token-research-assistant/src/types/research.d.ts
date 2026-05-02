@@ -49,7 +49,7 @@ export type ResearchResult = {
         name: string | null;
         symbol: string | null;
         slug: string | null;
-        source: 'coingecko' | 'local';
+        source: 'coingecko' | 'dexscreener' | 'local';
         confidence: 'high' | 'medium' | 'low';
     };
     market: {
@@ -57,6 +57,7 @@ export type ResearchResult = {
         marketCapUsd: number | null;
         fullyDilutedValuationUsd: number | null;
         volume24hUsd: number | null;
+        liquidityUsd: number | null;
         change24hPct: number | null;
         marketCapRank: number | null;
         lastUpdated: string | null;
@@ -98,7 +99,7 @@ export type ResearchResult = {
         localNoteId: string | null;
     };
     sourceMeta: {
-        primarySource: 'coingecko' | 'local';
+        primarySource: 'coingecko' | 'dexscreener' | 'local';
         fetchedAt: string;
         liveAttempted: boolean;
         liveSucceeded: boolean;

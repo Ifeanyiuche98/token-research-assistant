@@ -42,6 +42,7 @@ export function getFallbackResearchResponse(query: { raw: string; normalized: st
       marketCapUsd: null,
       fullyDilutedValuationUsd: null,
       volume24hUsd: null,
+      liquidityUsd: null,
       change24hPct: null,
       marketCapRank: null,
       lastUpdated: null

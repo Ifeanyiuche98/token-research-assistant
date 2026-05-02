@@ -5,6 +5,7 @@ import { mapToSector } from '../../utils/mapToSector';
 import { getSectorIntelligence } from '../../utils/getSectorIntelligence';
 import { isEthereumContractAddress } from './query';
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+const DEXSCREENER_BASE_URL = 'https://api.dexscreener.com/latest/dex/tokens';
 const CONTRACT_LOOKUP_CHAINS = ['ethereum', 'binance-smart-chain', 'polygon-pos', 'arbitrum-one', 'avalanche'];
 function cleanText(value) {
     if (!value)
@@ -37,18 +38,157 @@ function buildSocialUrl(prefix, handle) {
         return [];
     return [`${prefix}${cleaned}`];
 }
-async function fetchJson(url) {
+async function fetchJson(url, source = 'CoinGecko') {
     const response = await fetch(url, {
         headers: {
             accept: 'application/json'
         }
     });
     if (!response.ok) {
-        const error = new Error(`CoinGecko request failed with status ${response.status}`);
+        const error = new Error(`${source} request failed with status ${response.status}`);
         error.status = response.status;
         throw error;
     }
     return (await response.json());
+}
+function toNumber(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+    }
+    if (typeof value === 'string') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+}
+async function getDexScreenerPair(contractAddress) {
+    try {
+        const data = await fetchJson(`${DEXSCREENER_BASE_URL}/${encodeURIComponent(contractAddress)}`, 'DEXScreener');
+        const pairs = Array.isArray(data?.pairs) ? data.pairs : [];
+        if (pairs.length === 0) {
+            return null;
+        }
+        return pairs.reduce((bestPair, pair) => {
+            if (!bestPair) {
+                return pair;
+            }
+            const bestLiquidity = bestPair.liquidity?.usd ?? -1;
+            const nextLiquidity = pair.liquidity?.usd ?? -1;
+            return nextLiquidity > bestLiquidity ? pair : bestPair;
+        }, null);
+    }
+    catch (error) {
+        console.warn('[dexscreener] Token lookup failed', error);
+        return null;
+    }
+}
+function buildDexResponse(query, contractAddress, pair) {
+    const homepage = cleanUrlList((pair.info?.websites ?? []).map((website) => website.url));
+    const socials = Array.isArray(pair.info?.socials) ? pair.info.socials : [];
+    const twitter = cleanUrlList(socials.filter((social) => social.type === 'twitter').map((social) => social.url));
+    const telegram = cleanUrlList(socials.filter((social) => social.type === 'telegram').map((social) => social.url));
+    const market = {
+        priceUsd: toNumber(pair.priceUsd),
+        marketCapUsd: toNumber(pair.fdv),
+        fullyDilutedValuationUsd: toNumber(pair.fdv),
+        volume24hUsd: toNumber(pair.volume?.h24),
+        liquidityUsd: toNumber(pair.liquidity?.usd),
+        change24hPct: toNumber(pair.priceChange?.h24),
+        marketCapRank: null,
+        lastUpdated: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).toISOString() : new Date().toISOString()
+    };
+    const description = `${pair.baseToken?.name ?? query.raw} is being sourced from DEX liquidity pool data via DEXScreener. Treat this as limited-verification market context and verify the contract before interacting.`;
+    const project = {
+        description,
+        categories: ['DEX / Unverified'],
+        homepageUrl: homepage[0] ?? pair.url ?? null,
+        blockchainSiteUrls: pair.url ? cleanUrlList([pair.url]) : [],
+        officialTwitterHandle: null,
+        officialTelegramHandle: null,
+        sentimentVotesUpPct: null,
+        sentimentVotesDownPct: null
+    };
+    const risk = {
+        level: 'unknown',
+        score: null,
+        summary: 'Risk scoring is limited because this token was sourced from DEX liquidity data without CoinGecko verification.',
+        signals: [
+            {
+                key: 'missing_market_data',
+                label: 'Verification status',
+                value: 'DEX-only token — verify contract before interacting',
+                impact: 'medium'
+            }
+        ]
+    };
+    const signalInterpretation = {
+        summary: 'Token sourced from DEX liquidity pools. Verify the contract and liquidity conditions before interacting.',
+        tone: 'neutral',
+        signals: [
+            {
+                key: 'missing_data',
+                label: 'DEX-only source',
+                detail: 'This result comes from DEXScreener fallback data rather than the verified CoinGecko contract pipeline.',
+                tone: 'neutral'
+            }
+        ]
+    };
+    const researchBrief = {
+        headline: `${pair.baseToken?.name ?? query.raw} DEX market snapshot`,
+        body: `${pair.baseToken?.name ?? query.raw} was resolved from DEX liquidity pool data, so treat the market snapshot as exploratory and verify the contract before interacting.`
+    };
+    const sector = mapToSector(project.categories, pair.baseToken?.name ?? query.raw, project.description);
+    const sectorIntelligence = getSectorIntelligence(sector);
+    return {
+        status: 'live',
+        query,
+        result: {
+            identity: {
+                id: contractAddress,
+                name: pair.baseToken?.name ?? query.raw,
+                symbol: pair.baseToken?.symbol?.toUpperCase() ?? null,
+                slug: pair.pairAddress ?? contractAddress,
+                source: 'dexscreener',
+                confidence: 'medium'
+            },
+            market,
+            risk,
+            signalInterpretation,
+            researchBrief,
+            sector,
+            sectorIntelligence,
+            project,
+            media: {
+                thumbUrl: pair.info?.imageUrl ?? null,
+                smallUrl: pair.info?.imageUrl ?? null,
+                largeUrl: pair.info?.imageUrl ?? null
+            },
+            links: {
+                homepage,
+                blockchainSite: project.blockchainSiteUrls,
+                officialForum: [],
+                chat: [],
+                announcement: [],
+                twitter,
+                telegram,
+                github: [],
+                subreddit: []
+            },
+            fallback: {
+                used: false,
+                reason: 'none',
+                localNoteId: null
+            },
+            sourceMeta: {
+                primarySource: 'dexscreener',
+                fetchedAt: new Date().toISOString(),
+                liveAttempted: true,
+                liveSucceeded: true
+            }
+        },
+        message: 'Live research data retrieved successfully via DEXScreener fallback.',
+        error: null
+    };
 }
 function buildLiveResponse(query, coin) {
     const homepage = cleanUrlList(coin.links?.homepage);
@@ -65,6 +205,7 @@ function buildLiveResponse(query, coin) {
         marketCapUsd: coin.market_data?.market_cap?.usd ?? null,
         fullyDilutedValuationUsd: coin.market_data?.fully_diluted_valuation?.usd ?? null,
         volume24hUsd: coin.market_data?.total_volume?.usd ?? null,
+        liquidityUsd: null,
         change24hPct: coin.market_data?.price_change_percentage_24h ?? null,
         marketCapRank: coin.market_cap_rank ?? null,
         lastUpdated: coin.last_updated ?? null
@@ -174,6 +315,11 @@ export async function getCoinGeckoResearchResponse(query) {
                 contractLookupError = error;
                 console.warn(`[coingecko] Contract lookup failed on chain: ${chain}`, error);
             }
+        }
+        const dexPair = await getDexScreenerPair(contractAddress);
+        if (dexPair) {
+            console.info('[dexscreener] Contract lookup succeeded via fallback');
+            return buildDexResponse(query, contractAddress, dexPair);
         }
     }
     const searchUrl = `${COINGECKO_BASE_URL}/search?query=${encodeURIComponent(query.raw)}`;
