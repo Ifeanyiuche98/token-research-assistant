@@ -88,6 +88,36 @@ function shouldSuppressVolatilityConflict(text: string, change24hPct: number | n
   return normalized.includes('sharp volatility') || normalized.includes('sharp short-term swing') || normalized.includes('elevated short-term volatility');
 }
 
+function shouldSuppressRiskText(text: string, trustLabel: ReturnType<typeof getTrustLabel>, liquidityRisk: ReturnType<typeof getLiquidityRisk>) {
+  const normalized = normalizeText(text);
+
+  if (normalized.startsWith('context note:')) {
+    return true;
+  }
+
+  if (normalized === 'trading activity' && liquidityRisk === 'high') {
+    return true;
+  }
+
+  if (normalized.includes('liquidity swings') && liquidityRisk !== null) {
+    return true;
+  }
+
+  if (normalized.includes('narrative-driven volatility') || normalized.includes('market sentiment')) {
+    return trustLabel === 'danger';
+  }
+
+  return false;
+}
+
+function getTrustLabel(response: ResearchResponse) {
+  return response.result?.risk?.details?.trustLabel ?? null;
+}
+
+function getLiquidityRisk(response: ResearchResponse) {
+  return response.result?.risk?.details?.liquidityRisk ?? null;
+}
+
 function buildMixedSignalSummary(response: ResearchResponse, strengths: string[], risks: string[]) {
   const trustLabel = response.result?.risk?.details?.trustLabel ?? null;
   const liquidityRisk = response.result?.risk?.details?.liquidityRisk ?? null;
@@ -112,8 +142,8 @@ export function StrengthsRisksCard({ response }: StrengthsRisksCardProps) {
   const result = response.result;
   if (!result) return null;
 
-  const trustLabel = result.risk?.details?.trustLabel ?? null;
-  const liquidityRisk = result.risk?.details?.liquidityRisk ?? null;
+  const trustLabel = getTrustLabel(response);
+  const liquidityRisk = getLiquidityRisk(response);
   const volumeAnomaly = result.risk?.details?.volumeAnomaly ?? null;
   const change24hPct = result.market.change24hPct;
 
@@ -139,7 +169,13 @@ export function StrengthsRisksCard({ response }: StrengthsRisksCardProps) {
     ...(result.sectorIntelligence?.watchouts ?? [])
   ];
 
-  const risks = dedupeRiskItems(unique(rawRisks).filter((item) => !shouldSuppressVolatilityConflict(item, change24hPct))).slice(0, 6);
+  const risks = dedupeRiskItems(
+    unique(rawRisks).filter(
+      (item) =>
+        !shouldSuppressVolatilityConflict(item, change24hPct) &&
+        !shouldSuppressRiskText(item, trustLabel, liquidityRisk)
+    )
+  ).slice(0, 6);
   const mixedSignalSummary = buildMixedSignalSummary(response, strengths, risks);
 
   return (

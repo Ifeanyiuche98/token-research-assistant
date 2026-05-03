@@ -170,14 +170,37 @@ function shouldHideBackendSummary(summary: string | null | undefined) {
 
 function getRiskPostureFallbackCopy(tone: VisualRiskTone) {
   if (tone === 'danger') {
-    return 'Risk posture is being driven by aggregated trust and market conditions, even where explicit flag labels are limited.';
+    return 'No short risk-flag chips were surfaced, but the score is still being driven by deeper trust and market checks.';
   }
 
   if (tone === 'warning') {
-    return 'Risk posture is being driven primarily by interpreted market or trust signals rather than explicit flag strings.';
+    return 'No short risk-flag chips were surfaced, but interpreted trust or market signals still warrant caution.';
   }
 
   return 'No explicit risk flags were surfaced from the current dataset.';
+}
+
+function getHiddenRiskDrivers(risk: RiskAnalysis) {
+  const drivers: string[] = [];
+
+  if (risk.details?.honeypot === true) drivers.push('honeypot risk');
+  if (risk.details?.liquidityRisk === 'high') drivers.push('very thin liquidity');
+  else if (risk.details?.liquidityRisk === 'medium') drivers.push('light liquidity');
+  if (risk.details?.volumeAnomaly === true) drivers.push('unusual trading activity');
+  if (risk.details?.ageRisk === 'high') drivers.push('very new contract history');
+  else if (risk.details?.ageRisk === 'medium') drivers.push('short contract history');
+
+  return drivers;
+}
+
+function getNoFlagExplainer(tone: VisualRiskTone, risk: RiskAnalysis) {
+  const drivers = getHiddenRiskDrivers(risk);
+  if (drivers.length === 0 || tone === 'safe' || tone === 'unknown') {
+    return null;
+  }
+
+  const lead = tone === 'danger' ? 'Why this can still read as high risk:' : 'Why this can still read as elevated risk:';
+  return `${lead} ${drivers.join(', ')}.`;
 }
 
 export function RiskCard({ response }: RiskCardProps) {
@@ -215,6 +238,7 @@ export function RiskCard({ response }: RiskCardProps) {
   const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
   const backendSummary = shouldHideBackendSummary(risk.summary) || showDexBanner ? null : risk.summary;
   const riskPostureFallbackCopy = getRiskPostureFallbackCopy(visualTone);
+  const noFlagExplainer = flags.length === 0 ? getNoFlagExplainer(visualTone, risk) : null;
 
   return (
     <section className={`dashboard-card card risk-card-shell ${meta.className}`} aria-live="polite">
@@ -266,7 +290,10 @@ export function RiskCard({ response }: RiskCardProps) {
           })}
         </div>
       ) : (
-        <p className="dashboard-muted-copy risk-card-empty-copy">{riskPostureFallbackCopy}</p>
+        <div className="risk-card-no-flags-shell">
+          <p className="dashboard-muted-copy risk-card-empty-copy">{riskPostureFallbackCopy}</p>
+          {noFlagExplainer ? <p className="risk-card-no-flags-explainer">{noFlagExplainer}</p> : null}
+        </div>
       )}
 
       <div className="risk-details-shell">
