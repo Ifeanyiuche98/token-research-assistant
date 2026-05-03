@@ -2,24 +2,24 @@
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.55;
   font-weight: 400;
-  --bg: #0b0f14;
-  --bg-elevated: #111827;
-  --card: #111827;
-  --card-strong: #0f1623;
-  --panel: #0f1723;
-  --panel-alt: #131c2b;
-  --border: #1f2937;
-  --border-soft: rgba(31, 41, 55, 0.9);
-  --text: #e5e7eb;
-  --text-muted: #9ca3af;
-  --text-soft: #94a3b8;
-  --input-bg: #0d131d;
-  --input-border: #253142;
+  --bg: #050505;
+  --bg-elevated: #0b0b0b;
+  --card: #101010;
+  --card-strong: #14110a;
+  --panel: #14110a;
+  --panel-alt: #19140b;
+  --border: #3a2d12;
+  --border-soft: rgba(120, 92, 34, 0.55);
+  --text: #f5ead2;
+  --text-muted: #c9b68b;
+  --text-soft: #a88b52;
+  --input-bg: #0c0a07;
+  --input-border: #5b4520;
   --green: #22c55e;
   --red: #ef4444;
   --orange: #f59e0b;
-  --blue: #3b82f6;
-  --shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  --blue: #d4a937;
+  --shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
 }
 
 :root.light {
@@ -55,8 +55,8 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 28%),
-    radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.08), transparent 20%),
+    radial-gradient(circle at top, rgba(212, 169, 55, 0.18), transparent 28%),
+    radial-gradient(circle at 80% 20%, rgba(184, 134, 11, 0.10), transparent 20%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
   transition: background 0.25s ease, color 0.25s ease;
 }
@@ -166,9 +166,9 @@ h3 {
 }
 
 .button {
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(180deg, #e0b84f 0%, #b8860b 100%);
   color: white;
-  box-shadow: 0 12px 28px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 12px 28px rgba(184, 134, 11, 0.28);
 }
 
 .secondary-button,
@@ -208,7 +208,7 @@ h3 {
 .state-list-label,
 .dashboard-card-kicker {
   margin: 0 0 8px;
-  color: #60a5fa;
+  color: #d4a937;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.75rem;
@@ -249,9 +249,9 @@ h3 {
 }
 
 .mode-toggle-button-active {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(212, 169, 55, 0.12);
   color: var(--text);
-  border-color: rgba(59, 130, 246, 0.28);
+  border-color: rgba(212, 169, 55, 0.3);
 }
 
 .dashboard-hero-shell {
@@ -287,7 +287,7 @@ h3 {
   bottom: 6px;
   width: calc(50% - 6px);
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.92));
+  background: linear-gradient(180deg, rgba(224, 184, 79, 0.95), rgba(184, 134, 11, 0.95));
   transition: transform 0.22s ease;
 }
 
@@ -359,7 +359,7 @@ h3 {
 .dashboard-search-input:focus,
 .input:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+  box-shadow: 0 0 0 4px rgba(212, 169, 55, 0.18);
 }
 
 .dashboard-search-input-error,
@@ -399,8 +399,8 @@ h3 {
 .signal-chip {
   padding: 7px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.18);
-  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(212, 169, 55, 0.24);
+  background: rgba(212, 169, 55, 0.12);
   color: var(--text);
   font-size: 0.86rem;
 }
@@ -475,9 +475,9 @@ h3 {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: rgba(59, 130, 246, 0.16);
-  border: 1px solid rgba(59, 130, 246, 0.22);
-  color: #60a5fa;
+  background: rgba(212, 169, 55, 0.16);
+  border: 1px solid rgba(212, 169, 55, 0.24);
+  color: #d4a937;
   font-size: 1.2rem;
   flex-shrink: 0;
 }
@@ -1209,7 +1209,7 @@ h3 {
 }
 
 .comparison-value-stronger {
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(212, 169, 55, 0.10);
   font-weight: 600;
 }
 
