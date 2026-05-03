@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ResearchResponse, RiskAnalysis, TrustRiskLabel, TrustRiskBand } from '../types/research';
+import type { ResearchResponse, RiskAnalysis, TrustRiskBand } from '../types/research';
 
 type RiskCardProps = {
   response: ResearchResponse;
@@ -122,10 +122,44 @@ function buildDetails(risk: RiskAnalysis): DetailRow[] {
   ];
 }
 
+function getHumanRiskSummary(tone: VisualRiskTone) {
+  switch (tone) {
+    case 'danger':
+      return 'High structural risk signals detected. Use extreme caution and verify contract conditions independently.';
+    case 'warning':
+      return 'Moderate risk signals are present. Review liquidity, trading behavior, and contract history before acting.';
+    case 'safe':
+      return 'No major structural red flags were surfaced from available data, but independent verification is still important.';
+    default:
+      return 'Risk visibility is limited for this asset. Treat the result as incomplete and verify manually.';
+  }
+}
+
+function getTrustDriverLine(risk: RiskAnalysis, tone: VisualRiskTone) {
+  if (!risk.details || risk.details.trustLabel === null || risk.details.trustLabel === undefined) {
+    return null;
+  }
+
+  if (tone === 'danger') {
+    return 'Primary driver: elevated trust-layer risk from liquidity depth, trading behavior, and contract maturity.';
+  }
+
+  if (tone === 'warning') {
+    return 'Primary driver: trust-layer contract risk signals rather than broad market valuation metrics.';
+  }
+
+  if (tone === 'safe') {
+    return 'Primary driver: available trust-layer checks did not surface major structural contract warnings.';
+  }
+
+  return 'Primary driver: trust-layer visibility is partial, so this view should be treated cautiously.';
+}
+
 export function RiskCard({ response }: RiskCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const risk = response.result?.risk;
   const source = response.result?.identity.source;
+  const fallbackUsed = response.result?.fallback.used ?? false;
 
   if (!risk) {
     return (
@@ -145,14 +179,25 @@ export function RiskCard({ response }: RiskCardProps) {
   const visualTone = getVisualRiskTone(risk);
   const meta = getRiskMeta(visualTone);
   const score = risk.score === null ? null : Math.max(0, Math.min(10, risk.score));
-  const normalizedScore = score === null ? 0 : score * 10;
+  const normalizedScore = score === null ? 0 : (score / 10) * 100;
   const scoreLabel = score === null ? '—' : score.toFixed(1);
   const flags = (risk.flags ?? []).filter((flag) => !flag.toLowerCase().includes('not financial advice') && !flag.toLowerCase().includes('confirm contract authenticity'));
   const details = buildDetails(risk);
   const detailCount = details.filter((detail) => detail.value !== 'Unknown').length;
+  const humanSummary = getHumanRiskSummary(visualTone);
+  const trustDriverLine = getTrustDriverLine(risk, visualTone);
+  const showDexBanner = source === 'dexscreener';
+  const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
 
   return (
     <section className={`dashboard-card card risk-card-shell ${meta.className}`} aria-live="polite">
+      {showDexBanner ? (
+        <div className="risk-source-banner risk-source-banner-dex">⚠ Unverified DEX token — contract authenticity should be confirmed manually.</div>
+      ) : null}
+      {showLimitedVerificationBanner ? (
+        <div className="risk-source-banner risk-source-banner-fallback">⚠ Limited verification context — some live source validation was unavailable for this result.</div>
+      ) : null}
+
       <div className="dashboard-card-header dashboard-card-header-inline">
         <p className="dashboard-card-kicker">Risk intelligence</p>
         <span className={`dashboard-pill risk-card-badge ${meta.className}`}>{meta.badge}</span>
@@ -162,6 +207,8 @@ export function RiskCard({ response }: RiskCardProps) {
         <div className="risk-card-score-copy">
           <p className="risk-card-score-label">Risk score</p>
           <p className="risk-card-score risk-card-score-upgraded">{scoreLabel}<span>/ 10</span></p>
+          <p className="risk-card-human-summary">{humanSummary}</p>
+          {trustDriverLine ? <p className="risk-card-driver-line">{trustDriverLine}</p> : null}
           <p className="risk-card-summary risk-card-summary-upgraded">{risk.summary}</p>
         </div>
 
@@ -202,7 +249,7 @@ export function RiskCard({ response }: RiskCardProps) {
           onClick={() => setShowDetails((current) => !current)}
           aria-expanded={showDetails}
         >
-          <span>{showDetails ? '▼ Hide Details' : '▶ View Details'}</span>
+          <span>{showDetails ? '▼ Hide risk breakdown' : '▶ View risk breakdown'}</span>
           <span className="risk-details-toggle-meta">{detailCount} populated fields</span>
         </button>
 

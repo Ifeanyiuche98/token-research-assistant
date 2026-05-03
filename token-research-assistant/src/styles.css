@@ -724,6 +724,26 @@ h3 {
   font-size: 0.82rem;
 }
 
+.risk-source-banner {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.risk-source-banner-dex {
+  background: rgba(255, 180, 0, 0.08);
+  border: 1px solid rgba(255, 180, 0, 0.25);
+  color: #ffcc66;
+}
+
+.risk-source-banner-fallback {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  color: #cbd5e1;
+}
+
 .risk-card-score {
   font-size: 2rem;
   font-weight: 700;
@@ -744,6 +764,27 @@ h3 {
 .risk-card-summary-upgraded {
   max-width: 44ch;
   line-height: 1.65;
+}
+
+.risk-card-human-summary,
+.risk-card-driver-line,
+.strengths-risks-summary {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.risk-card-human-summary {
+  color: var(--text);
+  opacity: 0.92;
+}
+
+.risk-card-driver-line {
+  font-size: 0.92rem;
+}
+
+.strengths-risks-summary {
+  margin-bottom: 16px;
 }
 
 .risk-card-ring {
