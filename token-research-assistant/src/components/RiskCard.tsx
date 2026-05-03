@@ -213,7 +213,7 @@ export function RiskCard({ response }: RiskCardProps) {
   const humanSummary = getHumanRiskSummary(visualTone, showDexBanner);
   const trustDriverLine = getTrustDriverLine(risk, visualTone);
   const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
-  const backendSummary = shouldHideBackendSummary(risk.summary) || (showDexBanner && Boolean(trustDriverLine)) ? null : risk.summary;
+  const backendSummary = shouldHideBackendSummary(risk.summary) || showDexBanner ? null : risk.summary;
   const riskPostureFallbackCopy = getRiskPostureFallbackCopy(visualTone);
 
   return (
