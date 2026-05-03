@@ -34,11 +34,11 @@ function getVisualRiskTone(risk: RiskAnalysis): VisualRiskTone {
 function getRiskMeta(tone: VisualRiskTone) {
   switch (tone) {
     case 'safe':
-      return { label: 'SAFE', badge: '🟢 Safe', className: 'risk-visual-safe' };
+      return { label: 'LOWER RISK', badge: '🟢 Lower risk', className: 'risk-visual-safe' };
     case 'warning':
-      return { label: 'WARNING', badge: '🟡 Warning', className: 'risk-visual-warning' };
+      return { label: 'ELEVATED RISK', badge: '🟡 Elevated risk', className: 'risk-visual-warning' };
     case 'danger':
-      return { label: 'DANGER', badge: '🔴 Danger', className: 'risk-visual-danger' };
+      return { label: 'HIGH RISK', badge: '🔴 High risk', className: 'risk-visual-danger' };
     default:
       return { label: 'UNKNOWN', badge: '⚪ Unknown', className: 'risk-visual-unknown' };
   }
@@ -122,14 +122,16 @@ function buildDetails(risk: RiskAnalysis): DetailRow[] {
   ];
 }
 
-function getHumanRiskSummary(tone: VisualRiskTone) {
+function getHumanRiskSummary(tone: VisualRiskTone, isDexSource: boolean) {
   switch (tone) {
     case 'danger':
       return 'High structural risk signals detected. Use extreme caution and verify contract conditions independently.';
     case 'warning':
       return 'Moderate risk signals are present. Review liquidity, trading behavior, and contract history before acting.';
     case 'safe':
-      return 'No major structural red flags were surfaced from available data, but independent verification is still important.';
+      return isDexSource
+        ? 'No major structural contract red flags were surfaced from available checks, but market conditions still require independent verification.'
+        : 'No major structural red flags were surfaced from available data, but independent verification is still important.';
     default:
       return 'Risk visibility is limited for this asset. Treat the result as incomplete and verify manually.';
   }
@@ -168,7 +170,7 @@ function shouldHideBackendSummary(summary: string | null | undefined) {
 
 function getRiskPostureFallbackCopy(tone: VisualRiskTone) {
   if (tone === 'danger') {
-    return 'Risk posture is being driven by aggregated trust or market conditions, even where explicit flag labels are limited.';
+    return 'Risk posture is being driven by aggregated trust and market conditions, even where explicit flag labels are limited.';
   }
 
   if (tone === 'warning') {
@@ -207,11 +209,11 @@ export function RiskCard({ response }: RiskCardProps) {
   const flags = (risk.flags ?? []).filter((flag) => !flag.toLowerCase().includes('not financial advice') && !flag.toLowerCase().includes('confirm contract authenticity'));
   const details = buildDetails(risk);
   const detailCount = details.filter((detail) => detail.value !== 'Unknown').length;
-  const humanSummary = getHumanRiskSummary(visualTone);
-  const trustDriverLine = getTrustDriverLine(risk, visualTone);
   const showDexBanner = source === 'dexscreener';
+  const humanSummary = getHumanRiskSummary(visualTone, showDexBanner);
+  const trustDriverLine = getTrustDriverLine(risk, visualTone);
   const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
-  const backendSummary = shouldHideBackendSummary(risk.summary) ? null : risk.summary;
+  const backendSummary = shouldHideBackendSummary(risk.summary) || (showDexBanner && Boolean(trustDriverLine)) ? null : risk.summary;
   const riskPostureFallbackCopy = getRiskPostureFallbackCopy(visualTone);
 
   return (
@@ -230,7 +232,7 @@ export function RiskCard({ response }: RiskCardProps) {
 
       <div className="risk-card-score-row risk-card-score-row-upgraded">
         <div className="risk-card-score-copy">
-          <p className="risk-card-score-label">Risk score</p>
+          <p className="risk-card-score-label">Overall risk score</p>
           <p className="risk-card-score risk-card-score-upgraded">{scoreLabel}<span>/ 10</span></p>
           <p className="risk-card-human-summary">{humanSummary}</p>
           {trustDriverLine ? <p className="risk-card-driver-line">{trustDriverLine}</p> : null}
