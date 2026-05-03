@@ -155,6 +155,29 @@ function getTrustDriverLine(risk: RiskAnalysis, tone: VisualRiskTone) {
   return 'Primary driver: trust-layer visibility is partial, so this view should be treated cautiously.';
 }
 
+function shouldHideBackendSummary(summary: string | null | undefined) {
+  if (!summary) return true;
+
+  const normalized = summary.trim().toLowerCase();
+  return [
+    'higher market risk based on current liquidity, size, valuation gap, or short-term price movement.',
+    'moderate market risk based on current liquidity, size, valuation gap, or short-term price movement.',
+    'lower market risk based on current liquidity, size, valuation gap, and recent price movement.'
+  ].includes(normalized);
+}
+
+function getRiskPostureFallbackCopy(tone: VisualRiskTone) {
+  if (tone === 'danger') {
+    return 'Risk posture is being driven by aggregated trust or market conditions, even where explicit flag labels are limited.';
+  }
+
+  if (tone === 'warning') {
+    return 'Risk posture is being driven primarily by interpreted market or trust signals rather than explicit flag strings.';
+  }
+
+  return 'No explicit risk flags were surfaced from the current dataset.';
+}
+
 export function RiskCard({ response }: RiskCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const risk = response.result?.risk;
@@ -188,6 +211,8 @@ export function RiskCard({ response }: RiskCardProps) {
   const trustDriverLine = getTrustDriverLine(risk, visualTone);
   const showDexBanner = source === 'dexscreener';
   const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
+  const backendSummary = shouldHideBackendSummary(risk.summary) ? null : risk.summary;
+  const riskPostureFallbackCopy = getRiskPostureFallbackCopy(visualTone);
 
   return (
     <section className={`dashboard-card card risk-card-shell ${meta.className}`} aria-live="polite">
@@ -209,7 +234,7 @@ export function RiskCard({ response }: RiskCardProps) {
           <p className="risk-card-score risk-card-score-upgraded">{scoreLabel}<span>/ 10</span></p>
           <p className="risk-card-human-summary">{humanSummary}</p>
           {trustDriverLine ? <p className="risk-card-driver-line">{trustDriverLine}</p> : null}
-          <p className="risk-card-summary risk-card-summary-upgraded">{risk.summary}</p>
+          {backendSummary ? <p className="risk-card-summary risk-card-summary-upgraded">{backendSummary}</p> : null}
         </div>
 
         <div
@@ -239,7 +264,7 @@ export function RiskCard({ response }: RiskCardProps) {
           })}
         </div>
       ) : (
-        <p className="dashboard-muted-copy risk-card-empty-copy">No explicit risk flags were surfaced from the current dataset.</p>
+        <p className="dashboard-muted-copy risk-card-empty-copy">{riskPostureFallbackCopy}</p>
       )}
 
       <div className="risk-details-shell">
