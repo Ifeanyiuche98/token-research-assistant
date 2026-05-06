@@ -4,17 +4,37 @@ function includesAny(values: string[], keywords: string[]) {
   return values.some((value) => keywords.some((keyword) => value.includes(keyword)));
 }
 
-export function mapToSector(categories: string[], name?: string | null, description?: string | null): Sector {
+function buildValues(categories: string[], name?: string | null, description?: string | null) {
   const categoryValues = categories.map((category) => category.toLowerCase());
   const fallbackText = `${name ?? ''} ${description ?? ''}`.toLowerCase();
-  const allValues = [...categoryValues, fallbackText];
+  return {
+    categoryValues,
+    fallbackText,
+    allValues: [...categoryValues, fallbackText]
+  };
+}
 
-  if (includesAny(allValues, ['smart contract platform', 'layer 1', 'blockchain'])) {
-    return 'Layer 1';
+function isLayer1Category(categoryValues: string[]) {
+  return includesAny(categoryValues, [
+    'smart contract platform',
+    'layer 1',
+    'layer 1 (l1)',
+    'proof of work',
+    'proof of stake',
+    'bitcoin ecosystem',
+    'solana ecosystem'
+  ]);
+}
+
+export function mapToSector(categories: string[], name?: string | null, description?: string | null): Sector {
+  const { categoryValues, fallbackText, allValues } = buildValues(categories, name, description);
+
+  if (includesAny(allValues, ['decentralized exchange', 'defi', 'dex', 'lending', 'yield', 'amm', 'automated market maker', 'swap'])) {
+    return 'DeFi';
   }
 
-  if (includesAny(allValues, ['decentralized exchange', 'defi', 'dex', 'lending', 'yield'])) {
-    return 'DeFi';
+  if (includesAny(allValues, ['infrastructure', 'oracle', 'interoperability', 'cross-chain', 'data availability', 'middleware'])) {
+    return 'Infrastructure';
   }
 
   if (includesAny(allValues, ['gaming', 'gamefi', 'nft', 'metaverse'])) {
@@ -23,10 +43,6 @@ export function mapToSector(categories: string[], name?: string | null, descript
 
   if (includesAny(allValues, ['artificial intelligence', ' ai ', 'ai,', 'ai.', 'ai/'])) {
     return 'AI';
-  }
-
-  if (includesAny(allValues, ['infrastructure', 'oracle', 'interoperability', 'data'])) {
-    return 'Infrastructure';
   }
 
   if (includesAny(allValues, ['meme'])) {
@@ -39,6 +55,14 @@ export function mapToSector(categories: string[], name?: string | null, descript
 
   if (includesAny(allValues, ['exchange', 'cex', 'trading'])) {
     return 'Exchange';
+  }
+
+  if (isLayer1Category(categoryValues)) {
+    return 'Layer 1';
+  }
+
+  if (includesAny([fallbackText], ['layer 1 blockchain', 'l1 blockchain', 'foundational blockchain network'])) {
+    return 'Layer 1';
   }
 
   return 'Unknown';
