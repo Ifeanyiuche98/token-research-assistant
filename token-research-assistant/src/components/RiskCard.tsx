@@ -14,15 +14,10 @@ type DetailRow = {
 };
 
 function getVisualRiskTone(risk: RiskAnalysis): VisualRiskTone {
-  const trustLabel = risk.details?.trustLabel ?? null;
-  if (trustLabel === 'safe' || trustLabel === 'warning' || trustLabel === 'danger') {
-    return trustLabel;
-  }
-
-  switch (risk.level) {
-    case 'low':
+  switch (risk.band) {
+    case 'lower':
       return 'safe';
-    case 'medium':
+    case 'elevated':
       return 'warning';
     case 'high':
       return 'danger';
@@ -78,8 +73,7 @@ function getFlagTone(flag: string): DetailRow['tone'] {
     normalized.includes('new contract') ||
     normalized.includes('young contract') ||
     normalized.includes('unverified') ||
-    normalized.includes('trade tax') ||
-    normalized.includes('market cap unavailable')
+    normalized.includes('trade tax')
   ) {
     return 'warning';
   }
@@ -122,73 +116,79 @@ function buildDetails(risk: RiskAnalysis): DetailRow[] {
   ];
 }
 
-function getHumanRiskSummary(tone: VisualRiskTone, isDexSource: boolean) {
-  switch (tone) {
-    case 'danger':
-      return 'High structural risk signals detected. Use extreme caution and verify contract conditions independently.';
-    case 'warning':
-      return 'Moderate risk signals are present. Review liquidity, trading behavior, and contract history before acting.';
-    case 'safe':
+function getHumanRiskSummary(risk: RiskAnalysis, isDexSource: boolean) {
+  if (risk.overrideReason === 'honeypot_exit_risk') {
+    return 'Available checks suggest users may face serious selling or transfer restrictions, making this a high-risk setup.';
+  }
+
+  if (risk.overrideReason === 'thin_liquidity_weak_visibility') {
+    return 'Thin liquidity, very small scale, and limited verification make this setup difficult to trust.';
+  }
+
+  switch (risk.summaryMode) {
+    case 'stable':
       return isDexSource
-        ? 'No major structural contract red flags were surfaced from available checks, but market conditions still require independent verification.'
-        : 'No major structural red flags were surfaced from available data, but independent verification is still important.';
+        ? 'No major contract-level warnings were surfaced here, though independent verification still matters.'
+        : 'The current read looks broadly stable, with no obvious structural stress dominating the setup.';
+    case 'stable_watchful':
+      return 'The setup still looks mostly constructive, but a few caution signals keep it from reading as fully clean.';
+    case 'mixed_cautious':
+      return 'Some supportive signals are present, but the weaker areas are meaningful enough to keep caution in control.';
+    case 'high_risk_fragile':
+      return 'The broader profile looks risk-heavy, with warning signals strong enough to dominate the current read.';
     default:
       return 'Risk visibility is limited for this asset. Treat the result as incomplete and verify manually.';
   }
 }
 
-function getTrustDriverLine(risk: RiskAnalysis, tone: VisualRiskTone) {
-  if (!risk.details || risk.details.trustLabel === null || risk.details.trustLabel === undefined) {
-    return null;
+function getDriverLine(risk: RiskAnalysis) {
+  if (risk.overrideReason === 'honeypot_exit_risk') {
+    return 'Primary driver: severe exit-risk warning from contract checks.';
   }
 
-  if (tone === 'danger') {
-    return 'Primary driver: elevated trust-layer risk from liquidity depth, trading behavior, and contract maturity.';
+  if (risk.overrideReason === 'thin_liquidity_weak_visibility') {
+    return 'Primary driver: thin liquidity combined with weak trust visibility.';
   }
 
-  if (tone === 'warning') {
-    return 'Primary driver: trust-layer contract risk signals rather than broad market valuation metrics.';
+  switch (risk.dominantDriver) {
+    case 'liquidity':
+      return 'Primary driver: liquidity quality is not strong enough to make the setup feel fully reliable.';
+    case 'volatility':
+      return 'Primary driver: short-term price behavior is active enough to raise reversal and confidence risk.';
+    case 'fdv_gap':
+      return 'Primary driver: valuation stretch keeps dilution risk in focus.';
+    case 'scale':
+      return 'Primary driver: smaller scale leaves the setup more exposed to sentiment shifts.';
+    case 'trust':
+      return 'Primary driver: trust-layer checks add uncertainty beyond the cleaner market metrics.';
+    case 'honeypot':
+      return 'Primary driver: contract-level exit risk dominates the read.';
+    default:
+      return null;
   }
-
-  if (tone === 'safe') {
-    return 'Primary driver: available trust-layer checks did not surface major structural contract warnings.';
-  }
-
-  return 'Primary driver: trust-layer visibility is partial, so this view should be treated cautiously.';
 }
 
-function shouldHideBackendSummary(summary: string | null | undefined) {
-  if (!summary) return true;
-
-  const normalized = summary.trim().toLowerCase();
-  return [
-    'higher market risk based on current liquidity, size, valuation gap, or short-term price movement.',
-    'moderate market risk based on current liquidity, size, valuation gap, or short-term price movement.',
-    'lower market risk based on current liquidity, size, valuation gap, and recent price movement.'
-  ].includes(normalized);
-}
-
-function getRiskPostureFallbackCopy(tone: VisualRiskTone) {
-  if (tone === 'danger') {
-    return 'No short risk-flag chips were surfaced, but the score is still being driven by deeper trust and market checks.';
+function getRiskPostureFallbackCopy(risk: RiskAnalysis) {
+  if (risk.summaryMode === 'high_risk_fragile') {
+    return 'No direct contract-level flag chips were surfaced here, but the broader setup still reads as structurally fragile.';
   }
 
-  if (tone === 'warning') {
-    return 'No short risk-flag chips were surfaced, but interpreted trust or market signals still warrant caution.';
+  if (risk.summaryMode === 'mixed_cautious' || risk.summaryMode === 'stable_watchful') {
+    return 'No direct contract-level warning flags were surfaced here, but softer market or trust signals still warrant caution.';
   }
 
-  return 'No explicit risk flags were surfaced from the current dataset.';
+  return 'No direct contract-level warning flags were surfaced from the current dataset.';
 }
 
 function getHiddenRiskDrivers(risk: RiskAnalysis) {
   const drivers: string[] = [];
 
-  if (risk.details?.honeypot === true) drivers.push('honeypot risk');
+  if (risk.details?.honeypot === true) drivers.push('exit-risk concerns');
   if (risk.details?.liquidityRisk === 'high') drivers.push('very thin liquidity');
   else if (risk.details?.liquidityRisk === 'medium') drivers.push('light liquidity');
   if (risk.details?.volumeAnomaly === true) drivers.push('unusual trading activity');
-  if (risk.details?.ageRisk === 'high') drivers.push('very new contract history');
-  else if (risk.details?.ageRisk === 'medium') drivers.push('short contract history');
+  if (risk.details?.ageRisk === 'high') drivers.push('very limited market history');
+  else if (risk.details?.ageRisk === 'medium') drivers.push('short market history');
 
   return drivers;
 }
@@ -233,11 +233,10 @@ export function RiskCard({ response }: RiskCardProps) {
   const details = buildDetails(risk);
   const detailCount = details.filter((detail) => detail.value !== 'Unknown').length;
   const showDexBanner = source === 'dexscreener';
-  const humanSummary = getHumanRiskSummary(visualTone, showDexBanner);
-  const trustDriverLine = getTrustDriverLine(risk, visualTone);
+  const humanSummary = getHumanRiskSummary(risk, showDexBanner);
+  const trustDriverLine = getDriverLine(risk);
   const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
-  const backendSummary = shouldHideBackendSummary(risk.summary) || showDexBanner ? null : risk.summary;
-  const riskPostureFallbackCopy = getRiskPostureFallbackCopy(visualTone);
+  const riskPostureFallbackCopy = getRiskPostureFallbackCopy(risk);
   const noFlagExplainer = flags.length === 0 ? getNoFlagExplainer(visualTone, risk) : null;
 
   return (
@@ -260,7 +259,7 @@ export function RiskCard({ response }: RiskCardProps) {
           <p className="risk-card-score risk-card-score-upgraded">{scoreLabel}<span>/ 10</span></p>
           <p className="risk-card-human-summary">{humanSummary}</p>
           {trustDriverLine ? <p className="risk-card-driver-line">{trustDriverLine}</p> : null}
-          {backendSummary ? <p className="risk-card-summary risk-card-summary-upgraded">{backendSummary}</p> : null}
+          <p className="risk-card-summary risk-card-summary-upgraded">{risk.summary}</p>
         </div>
 
         <div
@@ -304,7 +303,7 @@ export function RiskCard({ response }: RiskCardProps) {
           aria-expanded={showDetails}
         >
           <span>{showDetails ? '▼ Hide risk breakdown' : '▶ View risk breakdown'}</span>
-          <span className="risk-details-toggle-meta">{detailCount} populated fields</span>
+          <span className="risk-details-toggle-meta">{detailCount} trust checks available</span>
         </button>
 
         {showDetails ? (

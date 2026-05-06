@@ -12,6 +12,10 @@ export type ResearchNote = {
 export type ResearchStatus = 'live' | 'fallback' | 'not_found' | 'error';
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'unknown';
+export type RiskBand = 'lower' | 'elevated' | 'high' | 'unknown';
+export type RiskSummaryMode = 'stable' | 'stable_watchful' | 'mixed_cautious' | 'high_risk_fragile' | 'unknown';
+export type RiskDriver = 'liquidity' | 'volatility' | 'fdv_gap' | 'scale' | 'trust' | 'honeypot' | 'missing_data' | 'mixed' | null;
+export type RiskOverrideReason = 'honeypot_exit_risk' | 'thin_liquidity_weak_visibility' | 'extreme_volatility' | null;
 
 export type RiskSignal = {
   key:
@@ -34,6 +38,10 @@ export type TrustRiskLabel = 'safe' | 'warning' | 'danger' | null;
 
 export type RiskAnalysis = {
   level: RiskLevel;
+  band: RiskBand;
+  summaryMode: RiskSummaryMode;
+  dominantDriver: RiskDriver;
+  overrideReason: RiskOverrideReason;
   score: number | null;
   summary: string;
   signals: RiskSignal[];

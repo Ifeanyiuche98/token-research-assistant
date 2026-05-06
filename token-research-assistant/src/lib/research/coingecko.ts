@@ -217,6 +217,10 @@ function buildDexResponse(query: { raw: string; normalized: string }, contractAd
   };
   const risk = {
     level: 'unknown' as const,
+    band: 'unknown' as const,
+    summaryMode: 'unknown' as const,
+    dominantDriver: 'missing_data' as const,
+    overrideReason: null,
     score: null,
     summary: 'Risk scoring is limited because this token was sourced from DEX liquidity data without CoinGecko verification, and market cap is unavailable outside FDV estimates.',
     signals: [
