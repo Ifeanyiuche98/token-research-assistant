@@ -1,14 +1,39 @@
 function includesAny(values, keywords) {
     return values.some((value) => keywords.some((keyword) => value.includes(keyword)));
 }
-export function mapToSector(categories, name, description) {
+function buildValues(categories, name, description) {
     const categoryValues = categories.map((category) => category.toLowerCase());
     const fallbackText = `${name ?? ''} ${description ?? ''}`.toLowerCase();
-    const allValues = [...categoryValues, fallbackText];
-    if (includesAny(allValues, ['smart contract platform', 'layer 1', 'blockchain'])) {
-        return 'Layer 1';
+    return {
+        categoryValues,
+        fallbackText,
+        allValues: [...categoryValues, fallbackText]
+    };
+}
+function hasDexOnlyMarker(categoryValues) {
+    return includesAny(categoryValues, ['dex / unverified']);
+}
+function isLayer1Category(categoryValues) {
+    return includesAny(categoryValues, [
+        'smart contract platform',
+        'layer 1',
+        'layer 1 (l1)',
+        'proof of work',
+        'proof of stake',
+        'bitcoin ecosystem',
+        'solana ecosystem'
+    ]);
+}
+export function mapToSector(categories, name, description) {
+    const { categoryValues, fallbackText, allValues } = buildValues(categories, name, description);
+    const dexOnly = hasDexOnlyMarker(categoryValues);
+    if (includesAny(allValues, ['oracle', 'interoperability', 'cross-chain', 'data availability', 'middleware', 'infrastructure'])) {
+        return 'Infrastructure';
     }
-    if (includesAny(allValues, ['decentralized exchange', 'defi', 'dex', 'lending', 'yield'])) {
+    if (includesAny(allValues, ['payments', 'payment network', 'cross-border payments', 'remittance', 'transfer of value', 'currencies and assets'])) {
+        return 'Payments';
+    }
+    if (!dexOnly && includesAny(allValues, ['decentralized exchange', 'defi', 'dex', 'lending', 'yield', 'amm', 'automated market maker', 'swap'])) {
         return 'DeFi';
     }
     if (includesAny(allValues, ['gaming', 'gamefi', 'nft', 'metaverse'])) {
@@ -17,17 +42,23 @@ export function mapToSector(categories, name, description) {
     if (includesAny(allValues, ['artificial intelligence', ' ai ', 'ai,', 'ai.', 'ai/'])) {
         return 'AI';
     }
-    if (includesAny(allValues, ['infrastructure', 'oracle', 'interoperability', 'data'])) {
-        return 'Infrastructure';
-    }
     if (includesAny(allValues, ['meme'])) {
         return 'Meme';
     }
     if (includesAny(allValues, ['stablecoin'])) {
         return 'Stablecoin';
     }
-    if (includesAny(allValues, ['exchange', 'cex', 'trading'])) {
+    if (!dexOnly && includesAny(allValues, ['exchange', 'cex', 'trading'])) {
         return 'Exchange';
+    }
+    if (isLayer1Category(categoryValues)) {
+        return 'Layer 1';
+    }
+    if (includesAny([fallbackText], ['layer 1 blockchain', 'l1 blockchain', 'foundational blockchain network'])) {
+        return 'Layer 1';
+    }
+    if (dexOnly) {
+        return 'Unknown';
     }
     return 'Unknown';
 }

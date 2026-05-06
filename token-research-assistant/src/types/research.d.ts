@@ -10,6 +10,10 @@ export type ResearchNote = {
 };
 export type ResearchStatus = 'live' | 'fallback' | 'not_found' | 'error';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'unknown';
+export type RiskBand = 'lower' | 'elevated' | 'high' | 'unknown';
+export type RiskSummaryMode = 'stable' | 'stable_watchful' | 'mixed_cautious' | 'high_risk_fragile' | 'unknown';
+export type RiskDriver = 'liquidity' | 'volatility' | 'fdv_gap' | 'scale' | 'trust' | 'honeypot' | 'missing_data' | 'mixed' | null;
+export type RiskOverrideReason = 'honeypot_exit_risk' | 'thin_liquidity_weak_visibility' | 'extreme_volatility' | null;
 export type RiskSignal = {
     key: 'missing_market_data' | 'low_volume' | 'high_24h_move' | 'small_market_cap' | 'fdv_gap' | 'honeypot' | 'low_liquidity' | 'volume_anomaly' | 'age_risk';
     label: string;
@@ -20,6 +24,10 @@ export type TrustRiskBand = 'low' | 'medium' | 'high' | null;
 export type TrustRiskLabel = 'safe' | 'warning' | 'danger' | null;
 export type RiskAnalysis = {
     level: RiskLevel;
+    band: RiskBand;
+    summaryMode: RiskSummaryMode;
+    dominantDriver: RiskDriver;
+    overrideReason: RiskOverrideReason;
     score: number | null;
     summary: string;
     signals: RiskSignal[];
@@ -55,7 +63,7 @@ export interface SectorIntelligence {
     profile: string;
     watchouts: string[];
 }
-export type Sector = 'Layer 1' | 'DeFi' | 'NFT / Gaming' | 'AI' | 'Infrastructure' | 'Meme' | 'Stablecoin' | 'Exchange' | 'Unknown';
+export type Sector = 'Layer 1' | 'Payments' | 'DeFi' | 'NFT / Gaming' | 'AI' | 'Infrastructure' | 'Meme' | 'Stablecoin' | 'Exchange' | 'Unknown';
 export type ResearchResult = {
     identity: {
         id: string | null;

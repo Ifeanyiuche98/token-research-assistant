@@ -45,6 +45,10 @@ export function getFallbackResearchResponse(query) {
         },
         risk: {
             level: 'unknown',
+            band: 'unknown',
+            summaryMode: 'unknown',
+            dominantDriver: 'missing_data',
+            overrideReason: null,
             score: null,
             summary: 'Market risk is unavailable because live market data could not be loaded for this result.',
             signals: [

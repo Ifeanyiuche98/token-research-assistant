@@ -1,9 +1,3 @@
-function formatCompactUsd(value) {
-    return new Intl.NumberFormat('en-US', {
-        notation: 'compact',
-        maximumFractionDigits: 2
-    }).format(value);
-}
 function firstSentence(value) {
     if (!value)
         return null;
@@ -21,53 +15,60 @@ function buildWhatItIs(project) {
     }
     return `${project.name ?? 'This asset'} is a crypto project with limited descriptive context in the current response.`;
 }
-function buildMarketPosture(market, risk) {
-    const largeMarketCap = market.marketCapUsd !== null && market.marketCapUsd >= 1000000000;
-    const mediumMarketCap = market.marketCapUsd !== null && market.marketCapUsd >= 100000000 && market.marketCapUsd < 1000000000;
-    const highLiquidity = market.volume24hUsd !== null && market.volume24hUsd >= 10000000;
-    const mediumLiquidity = market.volume24hUsd !== null && market.volume24hUsd >= 1000000 && market.volume24hUsd < 10000000;
-    const lowLiquidity = market.volume24hUsd !== null && market.volume24hUsd < 1000000;
-    if (largeMarketCap && highLiquidity && risk.level === 'low') {
-        return 'Current market structure looks relatively strong, supported by higher liquidity and larger market size.';
+function buildMarketPosture(risk) {
+    switch (risk.summaryMode) {
+        case 'stable':
+            return 'The current setup looks broadly stable, with supportive scale, healthier liquidity, and no obvious structural stress dominating the read.';
+        case 'stable_watchful':
+            return 'The setup still looks broadly constructive, but one or two softer signals keep it from reading as fully clean.';
+        case 'mixed_cautious':
+            return 'There are some supportive signals here, but the weaker areas are meaningful enough to keep the broader picture leaning cautious.';
+        case 'high_risk_fragile':
+            if (risk.overrideReason === 'honeypot_exit_risk') {
+                return 'The broader setup looks high risk because contract-level exit concerns dominate the picture.';
+            }
+            return 'The broader setup looks fragile, with enough structural weakness to make the token difficult to trust comfortably.';
+        default:
+            return 'Current market structure is hard to judge because live market data is incomplete.';
     }
-    if ((mediumMarketCap || mediumLiquidity || risk.level === 'medium') && !lowLiquidity) {
-        return 'Current market structure suggests moderate risk, with balanced size and liquidity.';
-    }
-    if (lowLiquidity || (!largeMarketCap && market.marketCapUsd !== null && market.marketCapUsd < 100000000) || risk.level === 'high') {
-        return 'Current market structure suggests elevated risk, driven by smaller market size and limited liquidity.';
-    }
-    if (risk.level === 'unknown') {
-        return 'Current market structure is hard to judge because live market data is incomplete.';
-    }
-    return 'Current market structure suggests moderate risk, with balanced size and liquidity.';
 }
 function buildWatchout(market, risk, signalInterpretation) {
-    const hasLowLiquiditySignal = risk.signals.some((signal) => signal.key === 'low_volume' && signal.impact === 'high') ||
-        signalInterpretation.signals.some((signal) => signal.key === 'liquidity' && signal.tone === 'negative');
-    if (hasLowLiquiditySignal) {
-        return 'The main watchout is low liquidity, which can increase price instability.';
+    if (risk.overrideReason === 'honeypot_exit_risk') {
+        return 'The main watchout is severe exit risk: users may not be able to sell or transfer normally.';
     }
-    const hasFdvGapSignal = risk.signals.some((signal) => signal.key === 'fdv_gap') || signalInterpretation.signals.some((signal) => signal.key === 'fdv_gap' && signal.tone !== 'positive');
-    if (hasFdvGapSignal) {
-        return 'The main watchout is a high valuation gap, which may indicate dilution risk.';
+    if (risk.overrideReason === 'thin_liquidity_weak_visibility') {
+        return 'The main watchout is that thin liquidity and weak verification visibility can make short-term market behavior hard to trust.';
     }
-    const hasVolatilitySignal = risk.signals.some((signal) => signal.key === 'high_24h_move') || signalInterpretation.signals.some((signal) => signal.key === 'volatility' && signal.tone !== 'positive');
-    if (hasVolatilitySignal) {
-        return 'The main watchout is elevated volatility, which can make short-term price moves harder to read.';
+    if (risk.dominantDriver === 'liquidity') {
+        return 'The main watchout is liquidity quality, because thinner markets can amplify slippage and unstable price action.';
     }
-    const hasSmallMarketCapSignal = risk.signals.some((signal) => signal.key === 'small_market_cap') || signalInterpretation.signals.some((signal) => signal.key === 'market_cap' && signal.tone !== 'positive');
-    if (hasSmallMarketCapSignal) {
-        return 'The main watchout is smaller market size, which can leave the asset more sensitive to sentiment shifts.';
+    if (risk.dominantDriver === 'volatility') {
+        return 'The main watchout is unusually active short-term price behavior, which can make conviction harder to sustain.';
+    }
+    if (risk.dominantDriver === 'fdv_gap') {
+        return 'The main watchout is valuation stretch, which can leave the setup more exposed to dilution concerns.';
+    }
+    if (risk.dominantDriver === 'scale') {
+        return 'The main watchout is smaller scale, because lower depth can make sentiment swings matter more.';
+    }
+    if (risk.dominantDriver === 'trust') {
+        return 'The main watchout is limited trust visibility, because cleaner market signals do not fully remove contract-level uncertainty.';
     }
     if (risk.level === 'unknown') {
         return 'The main watchout is incomplete market data, which limits how much confidence to place in this snapshot.';
     }
-    const volumeText = market.volume24hUsd !== null ? ` around $${formatCompactUsd(market.volume24hUsd)} in 24h volume` : '';
-    return `The main watchout is that conditions can still change quickly, even with${volumeText || ' the current'} market support.`;
+    const hasCautionSignals = signalInterpretation.signals.some((signal) => signal.tone === 'caution' || signal.tone === 'negative');
+    if (hasCautionSignals) {
+        return 'The main watchout is that a few softer signals still deserve monitoring even if the broader setup looks calmer.';
+    }
+    if (market.volume24hUsd !== null) {
+        return 'The main watchout is that broader crypto conditions can still change quickly, even with current market support.';
+    }
+    return 'The main watchout is that market conditions can shift quickly, so the current snapshot should not be treated as static.';
 }
 export function generateResearchBrief(market, risk, signalInterpretation, project) {
     const sentenceOne = buildWhatItIs(project);
-    const sentenceTwo = buildMarketPosture(market, risk);
+    const sentenceTwo = buildMarketPosture(risk);
     const sentenceThree = buildWatchout(market, risk, signalInterpretation);
     return {
         headline: 'Market structure overview',

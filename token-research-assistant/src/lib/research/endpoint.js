@@ -1,6 +1,7 @@
 import { getCoinGeckoResearchResponse } from './coingecko';
 import { getFallbackResearchResponse } from './fallback';
 import { validateQuery } from './query';
+import { enrichTrustRisk } from '../../utils/enrichTrustRisk';
 function classifyLiveLookupFailure(error, query) {
     const maybeStatus = typeof error === 'object' && error && 'status' in error ? error.status : undefined;
     const contractLookup = typeof error === 'object' && error && 'contractLookup' in error ? error.contractLookup : null;
@@ -55,9 +56,10 @@ export async function resolveResearch(queryValue) {
     try {
         const liveResponse = await getCoinGeckoResearchResponse(query);
         if (liveResponse) {
+            const enrichedResponse = await enrichTrustRisk(liveResponse);
             return {
                 statusCode: 200,
-                body: liveResponse
+                body: enrichedResponse
             };
         }
     }

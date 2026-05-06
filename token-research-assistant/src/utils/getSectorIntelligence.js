@@ -5,6 +5,11 @@ export function getSectorIntelligence(sector) {
                 profile: 'Layer 1 assets are foundational blockchain networks that usually compete on security, scalability, decentralization, and ecosystem growth.',
                 watchouts: ['Developer adoption', 'Network activity', 'Competition from other Layer 1 networks']
             };
+        case 'Payments':
+            return {
+                profile: 'Payments assets are focused on moving value efficiently across users, currencies, or financial rails, often emphasizing settlement speed, cost, and interoperability.',
+                watchouts: ['Payment adoption', 'Transaction demand', 'Competition from other settlement networks']
+            };
         case 'DeFi':
             return {
                 profile: 'DeFi assets are linked to decentralized financial services such as trading, lending, liquidity, and on-chain financial infrastructure.',
