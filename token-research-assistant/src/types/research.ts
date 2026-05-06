@@ -83,7 +83,7 @@ export interface SectorIntelligence {
   watchouts: string[];
 }
 
-export type Sector = 'Layer 1' | 'DeFi' | 'NFT / Gaming' | 'AI' | 'Infrastructure' | 'Meme' | 'Stablecoin' | 'Exchange' | 'Unknown';
+export type Sector = 'Layer 1' | 'Payments' | 'DeFi' | 'NFT / Gaming' | 'AI' | 'Infrastructure' | 'Meme' | 'Stablecoin' | 'Exchange' | 'Unknown';
 
 export type ResearchResult = {
   identity: {

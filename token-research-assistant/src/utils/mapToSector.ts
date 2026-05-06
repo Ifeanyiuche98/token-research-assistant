@@ -14,6 +14,10 @@ function buildValues(categories: string[], name?: string | null, description?: s
   };
 }
 
+function hasDexOnlyMarker(categoryValues: string[]) {
+  return includesAny(categoryValues, ['dex / unverified']);
+}
+
 function isLayer1Category(categoryValues: string[]) {
   return includesAny(categoryValues, [
     'smart contract platform',
@@ -28,13 +32,18 @@ function isLayer1Category(categoryValues: string[]) {
 
 export function mapToSector(categories: string[], name?: string | null, description?: string | null): Sector {
   const { categoryValues, fallbackText, allValues } = buildValues(categories, name, description);
+  const dexOnly = hasDexOnlyMarker(categoryValues);
 
-  if (includesAny(allValues, ['decentralized exchange', 'defi', 'dex', 'lending', 'yield', 'amm', 'automated market maker', 'swap'])) {
-    return 'DeFi';
+  if (includesAny(allValues, ['oracle', 'interoperability', 'cross-chain', 'data availability', 'middleware', 'infrastructure'])) {
+    return 'Infrastructure';
   }
 
-  if (includesAny(allValues, ['infrastructure', 'oracle', 'interoperability', 'cross-chain', 'data availability', 'middleware'])) {
-    return 'Infrastructure';
+  if (includesAny(allValues, ['payments', 'payment network', 'cross-border payments', 'remittance', 'transfer of value', 'currencies and assets'])) {
+    return 'Payments';
+  }
+
+  if (!dexOnly && includesAny(allValues, ['decentralized exchange', 'defi', 'dex', 'lending', 'yield', 'amm', 'automated market maker', 'swap'])) {
+    return 'DeFi';
   }
 
   if (includesAny(allValues, ['gaming', 'gamefi', 'nft', 'metaverse'])) {
@@ -53,7 +62,7 @@ export function mapToSector(categories: string[], name?: string | null, descript
     return 'Stablecoin';
   }
 
-  if (includesAny(allValues, ['exchange', 'cex', 'trading'])) {
+  if (!dexOnly && includesAny(allValues, ['exchange', 'cex', 'trading'])) {
     return 'Exchange';
   }
 
@@ -63,6 +72,10 @@ export function mapToSector(categories: string[], name?: string | null, descript
 
   if (includesAny([fallbackText], ['layer 1 blockchain', 'l1 blockchain', 'foundational blockchain network'])) {
     return 'Layer 1';
+  }
+
+  if (dexOnly) {
+    return 'Unknown';
   }
 
   return 'Unknown';
