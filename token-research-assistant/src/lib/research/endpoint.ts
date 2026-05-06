@@ -1,6 +1,7 @@
 import { getCoinGeckoResearchResponse } from './coingecko';
 import { getFallbackResearchResponse } from './fallback';
 import { validateQuery } from './query';
+import { enrichTrustRisk } from '../../utils/enrichTrustRisk';
 import type { QueryValidationResult } from './query';
 import type { ResearchResponse } from '../../types/research';
 
@@ -65,9 +66,10 @@ export async function resolveResearch(queryValue: string): Promise<{ statusCode:
   try {
     const liveResponse = await getCoinGeckoResearchResponse(query);
     if (liveResponse) {
+      const enrichedResponse = await enrichTrustRisk(liveResponse);
       return {
         statusCode: 200,
-        body: liveResponse
+        body: enrichedResponse
       };
     }
   } catch (error) {
