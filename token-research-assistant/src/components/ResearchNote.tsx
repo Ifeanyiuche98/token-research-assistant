@@ -6,6 +6,7 @@ import { RiskCard } from './RiskCard';
 import { SectorCard } from './SectorCard';
 import { SignalCard } from './SignalCard';
 import { StrengthsRisksCard } from './StrengthsRisksCard';
+import { GladysInsightCard } from './GladysInsightCard';
 
 type ResearchNoteProps = {
   note: ResearchNoteType;
@@ -97,6 +98,7 @@ export function ResearchNote({ note, response }: ResearchNoteProps) {
           <MarketCard response={response} />
           <RiskCard response={response} />
           <SignalCard response={response} />
+          <GladysInsightCard response={response} />
           <ResearchCard response={response} />
           <SectorCard response={response} />
           <StrengthsRisksCard response={response} />
