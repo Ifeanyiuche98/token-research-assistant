@@ -134,6 +134,22 @@ function buildRiskCall(input: GladysInsightInput) {
   if (input.risk.overrideReason === 'honeypot_exit_risk') return 'Biggest concern: exit risk dominates everything else.';
   if (input.risk.overrideReason === 'thin_liquidity_weak_visibility') return 'Biggest concern: thin liquidity and weak visibility make this hard to trust.';
 
+  if (input.risk.level === 'low') {
+    if (input.risk.dominantDriver === 'fdv_gap') {
+      return 'Biggest concern: valuation stretch still deserves attention, even if the broader setup looks calm.';
+    }
+
+    if (input.sector === 'Stablecoin') {
+      return 'Biggest concern: stable assets still depend on reserve trust, redemption confidence, and market plumbing.';
+    }
+
+    if (input.sector === 'Layer 1' || input.token.name?.toLowerCase() === 'bitcoin') {
+      return 'Biggest concern: broader market conditions can still change quickly, even when the structure looks healthy.';
+    }
+
+    return 'Biggest concern: calmer setups can still reprice quickly if sentiment or market conditions shift.';
+  }
+
   switch (input.risk.dominantDriver) {
     case 'liquidity':
       return 'Biggest concern: liquidity is not strong enough for comfort.';
