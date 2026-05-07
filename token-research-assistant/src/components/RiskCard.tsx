@@ -26,10 +26,12 @@ function getVisualRiskTone(risk: RiskAnalysis): VisualRiskTone {
   }
 }
 
-function getRiskMeta(tone: VisualRiskTone) {
+function getRiskMeta(tone: VisualRiskTone, isDexSource: boolean) {
   switch (tone) {
     case 'safe':
-      return { label: 'LOWER RISK', badge: '🟢 Lower risk', className: 'risk-visual-safe' };
+      return isDexSource
+        ? { label: 'LOWER VISIBLE RISK', badge: '🟢 Lower visible risk', className: 'risk-visual-safe' }
+        : { label: 'LOWER RISK', badge: '🟢 Lower risk', className: 'risk-visual-safe' };
     case 'warning':
       return { label: 'ELEVATED RISK', badge: '🟡 Elevated risk', className: 'risk-visual-warning' };
     case 'danger':
@@ -128,7 +130,7 @@ function getHumanRiskSummary(risk: RiskAnalysis, isDexSource: boolean) {
   switch (risk.summaryMode) {
     case 'stable':
       return isDexSource
-        ? 'No major contract-level warnings were surfaced here, though independent verification still matters.'
+        ? 'The visible market setup looks relatively calm, but this remains an unverified DEX token so confidence should stay limited.'
         : 'The current read looks broadly stable, with no obvious structural stress dominating the setup.';
     case 'stable_watchful':
       return 'The setup still looks mostly constructive, but a few caution signals keep it from reading as fully clean.';
@@ -225,14 +227,14 @@ export function RiskCard({ response }: RiskCardProps) {
   }
 
   const visualTone = getVisualRiskTone(risk);
-  const meta = getRiskMeta(visualTone);
+  const showDexBanner = source === 'dexscreener';
+  const meta = getRiskMeta(visualTone, showDexBanner);
   const score = risk.score === null ? null : Math.max(0, Math.min(10, risk.score));
   const normalizedScore = score === null ? 0 : (score / 10) * 100;
   const scoreLabel = score === null ? '—' : score.toFixed(1);
   const flags = (risk.flags ?? []).filter((flag) => !flag.toLowerCase().includes('not financial advice') && !flag.toLowerCase().includes('confirm contract authenticity'));
   const details = buildDetails(risk);
   const detailCount = details.filter((detail) => detail.value !== 'Unknown').length;
-  const showDexBanner = source === 'dexscreener';
   const humanSummary = getHumanRiskSummary(risk, showDexBanner);
   const trustDriverLine = getDriverLine(risk);
   const showLimitedVerificationBanner = !showDexBanner && fallbackUsed;
