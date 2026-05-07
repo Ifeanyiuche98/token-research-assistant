@@ -45,96 +45,96 @@ function unique(items) {
 }
 function buildHeadline(input) {
     if (input.risk.overrideReason === 'honeypot_exit_risk')
-        return 'GLADYS: Severe exit-risk warning';
+        return 'GLADYS: Exit risk looks severe';
     if (input.risk.level === 'high')
-        return 'GLADYS: This setup looks structurally fragile';
+        return 'GLADYS: Too many weak points are stacking up';
     if (input.token.source === 'dexscreener' && input.risk.band === 'lower')
-        return 'GLADYS: Calm visible setup, limited trust';
+        return 'GLADYS: Calm on the surface, but trust is limited';
     if (input.risk.level === 'medium')
-        return 'GLADYS: Constructive in parts, but caution still leads';
+        return 'GLADYS: Not clean enough to treat casually';
     if (input.risk.level === 'low')
-        return 'GLADYS: Broadly stable setup';
-    return 'GLADYS: Limited-confidence read';
+        return 'GLADYS: This looks broadly healthy';
+    return 'GLADYS: Read this with limited confidence';
 }
 function buildSummary(input) {
     const tokenName = input.token.name ?? 'This token';
     if (input.risk.overrideReason === 'honeypot_exit_risk') {
-        return `${tokenName} should be treated as a serious risk case because available checks suggest users may struggle to sell or exit normally.`;
+        return `${tokenName} should be treated as a serious danger case because available checks suggest selling or exiting may not work normally.`;
     }
     if (input.token.source === 'dexscreener' && input.risk.band === 'lower') {
-        return `${tokenName} looks relatively calm from the visible market data, but it is still being interpreted from an unverified DEX context rather than a stronger verified listing path.`;
+        return `${tokenName} looks calm from the visible market data, but this is still a DEX-only read, so low visible risk should not be confused with strong verification.`;
     }
     if (input.risk.level === 'high') {
-        return `${tokenName} currently reads as a high-risk setup because the weaker structural signals are strong enough to outweigh any supportive ones.`;
+        return `${tokenName} currently looks fragile. Any positives here are being outweighed by the main caution signals.`;
     }
     if (input.risk.level === 'medium') {
-        return `${tokenName} has some constructive traits, but the risk picture is still mixed enough that caution should stay in control.`;
+        return `${tokenName} has some decent traits, but the setup still has enough weak spots that caution should lead.`;
     }
     if (input.risk.level === 'low') {
-        return `${tokenName} looks broadly stable in the current snapshot, with no major structural stress dominating the read.`;
+        return `${tokenName} looks stable right now, with no obvious stress point taking over the picture.`;
     }
-    return `${tokenName} does not have enough complete market context for a stronger explanation, so this should be treated as a limited snapshot.`;
+    return `${tokenName} does not have enough clean market context for a stronger read, so this should be treated as a limited snapshot.`;
 }
 function buildRiskCall(input) {
     if (input.risk.overrideReason === 'honeypot_exit_risk')
-        return 'Main risk call: contract-level exit risk dominates everything else.';
+        return 'Biggest concern: exit risk dominates everything else.';
     if (input.risk.overrideReason === 'thin_liquidity_weak_visibility')
-        return 'Main risk call: thin liquidity and weak trust visibility make this setup hard to rely on.';
+        return 'Biggest concern: thin liquidity and weak visibility make this hard to trust.';
     switch (input.risk.dominantDriver) {
         case 'liquidity':
-            return 'Main risk call: liquidity quality is the biggest weakness in the current read.';
+            return 'Biggest concern: liquidity is not strong enough for comfort.';
         case 'volatility':
-            return 'Main risk call: short-term price instability is the biggest caution driver.';
+            return 'Biggest concern: short-term price action is still too unstable.';
         case 'fdv_gap':
-            return 'Main risk call: valuation stretch is keeping dilution risk in focus.';
+            return 'Biggest concern: valuation stretch keeps dilution risk alive.';
         case 'scale':
-            return 'Main risk call: smaller market scale leaves the setup easier to destabilize.';
+            return 'Biggest concern: the token is still small enough to be easily shaken.';
         case 'trust':
-            return 'Main risk call: trust-layer signals are weaker than the cleaner market surface suggests.';
+            return 'Biggest concern: trust signals are weaker than the surface numbers suggest.';
         case 'honeypot':
-            return 'Main risk call: exit-risk checks materially weaken confidence in normal token behavior.';
+            return 'Biggest concern: contract-level exit checks materially weaken trust.';
         default:
-            return 'Main risk call: the current read is driven by a mix of market structure and trust signals.';
+            return 'Biggest concern: this setup still needs a cautious read, even if parts of it look fine.';
     }
 }
 function buildConfidenceNote(input) {
     if (input.token.source === 'coingecko' && !input.fallback.used) {
-        return 'Confidence note: this read has relatively stronger source confidence because it comes through the primary verified research path.';
+        return 'Confidence: relatively stronger, because this came through the primary verified research path.';
     }
     if (input.token.source === 'dexscreener') {
-        return 'Confidence note: this read is useful, but confidence should stay limited because the token is being interpreted from DEX-only / unverified context.';
+        return 'Confidence: limited, because this is being interpreted from a DEX-only / unverified source path.';
     }
     if (input.fallback.used || input.token.source === 'local') {
-        return 'Confidence note: this result is partly fallback-based, so treat it as directional rather than fully authoritative.';
+        return 'Confidence: limited, because this result is partly fallback-based rather than fully live.';
     }
-    return 'Confidence note: treat this as a limited-confidence snapshot and verify important details manually.';
+    return 'Confidence: limited, so important details should still be verified manually.';
 }
 function buildActionNote(input) {
     if (input.risk.overrideReason === 'honeypot_exit_risk') {
-        return 'What to do next: do not assume normal exits are possible — verify sellability, taxes, and contract safety before trusting this market.';
+        return 'Next move: do not assume normal exits are possible. Verify sellability, taxes, and contract safety first.';
     }
     if (input.token.source === 'dexscreener' && input.risk.band === 'lower') {
-        return 'What to do next: verify contract authenticity, liquidity depth, and any external project links before treating the calm read as genuine safety.';
+        return 'Next move: verify the contract, liquidity depth, and real project links before treating this calm read as genuine safety.';
     }
     if (input.risk.level === 'high') {
-        return 'What to do next: double-check liquidity, recent behavior, and trust flags before treating any short-term upside as durable.';
+        return 'Next move: re-check liquidity, trust flags, and recent behavior before trusting any upside story.';
     }
     if (input.risk.level === 'medium') {
-        return 'What to do next: monitor the main caution drivers and confirm whether the stronger-looking signals remain intact.';
+        return 'Next move: watch the main weak points and see whether the better-looking signals actually hold up.';
     }
-    return 'What to do next: keep an eye on broader market conditions and re-check the token if the source context or market structure changes.';
+    return 'Next move: keep an eye on market conditions and re-check if the structure or source context changes.';
 }
 export function generateGladysInsight(input) {
     const bullets = unique([
-        input.researchBrief.body,
-        input.signalInterpretation.summary,
-        input.signalInterpretation.topSignals[0],
-        input.token.source === 'dexscreener' ? 'Source context: DEX-only / unverified token path.' : null,
-        input.risk.honeypot === true ? 'Trust check: honeypot warning surfaced.' : null,
-        input.risk.liquidityRisk === 'high' ? 'Trust check: liquidity depth is very thin.' : null,
-        input.risk.volumeAnomaly === true ? 'Trust check: trading activity looks unusually high relative to liquidity.' : null,
-        input.risk.ageRisk === 'high' ? 'Trust check: market history is still very limited.' : null
-    ]).slice(0, 4);
+        input.token.source === 'dexscreener' ? 'DEX-only source path.' : null,
+        input.risk.honeypot === true ? 'Honeypot warning surfaced.' : null,
+        input.risk.liquidityRisk === 'high' ? 'Liquidity is very thin.' : null,
+        input.risk.volumeAnomaly === true ? 'Volume looks unusually high relative to liquidity.' : null,
+        input.risk.ageRisk === 'high' ? 'Market history is still very limited.' : null,
+        input.risk.ageRisk === 'medium' ? 'Market history is still fairly short.' : null,
+        input.risk.trustLabel === 'danger' ? 'Trust checks materially worsen the setup.' : null,
+        input.risk.trustLabel === 'warning' ? 'Trust checks add meaningful caution.' : null
+    ]).slice(0, 2);
     return {
         headline: buildHeadline(input),
         summary: buildSummary(input),

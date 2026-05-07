@@ -37,18 +37,18 @@ export function GladysInsightCard({ response }: GladysInsightCardProps) {
 
       <div className="gladys-grid">
         <div className="gladys-panel">
-          <p className="gladys-label">Risk call</p>
+          <p className="gladys-label">Biggest concern</p>
           <p className="dashboard-card-copy">{insight.riskCall}</p>
         </div>
 
         <div className="gladys-panel">
-          <p className="gladys-label">Confidence note</p>
+          <p className="gladys-label">Confidence</p>
           <p className="dashboard-card-copy">{insight.confidenceNote}</p>
         </div>
       </div>
 
       <div className="gladys-panel gladys-panel-action">
-        <p className="gladys-label">What GLADYS wants you to keep in mind</p>
+        <p className="gladys-label">Next move</p>
         <p className="dashboard-card-copy">{insight.actionNote}</p>
       </div>
 

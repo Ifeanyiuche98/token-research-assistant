@@ -808,7 +808,9 @@ h3 {
 }
 
 .gladys-copy {
-  max-width: 72ch;
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
 .gladys-grid {
@@ -839,7 +841,11 @@ h3 {
 }
 
 .gladys-list {
-  margin-top: 16px;
+  margin-top: 14px;
+}
+
+.gladys-list li {
+  line-height: 1.55;
 }
 
 :root.light .gladys-card {
