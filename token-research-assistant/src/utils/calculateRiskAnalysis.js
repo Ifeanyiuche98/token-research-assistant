@@ -11,12 +11,14 @@ function formatPercent(value) {
 function createSignal(key, label, value, impact) {
     return { key, label, value, impact };
 }
+const HIGH_RISK_SCORE_THRESHOLD = 5.5;
+const ELEVATED_RISK_SCORE_THRESHOLD = 3;
 function scoreToLevel(score) {
     if (score === null)
         return 'unknown';
-    if (score >= 6)
+    if (score >= HIGH_RISK_SCORE_THRESHOLD)
         return 'high';
-    if (score >= 3)
+    if (score >= ELEVATED_RISK_SCORE_THRESHOLD)
         return 'medium';
     return 'low';
 }

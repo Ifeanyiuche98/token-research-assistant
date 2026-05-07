@@ -82,21 +82,23 @@ function deriveTrustScore(input) {
         score += 0.75;
     return Math.max(0, Math.min(10, Number(score.toFixed(1))));
 }
+const HIGH_RISK_SCORE_THRESHOLD = 5.5;
+const ELEVATED_RISK_SCORE_THRESHOLD = 3;
 function deriveTrustLabel(score) {
     if (score === null)
         return null;
-    if (score >= 7)
+    if (score >= HIGH_RISK_SCORE_THRESHOLD)
         return 'danger';
-    if (score >= 4)
+    if (score >= ELEVATED_RISK_SCORE_THRESHOLD)
         return 'warning';
     return 'safe';
 }
 function scoreToLevel(score) {
     if (score === null)
         return 'unknown';
-    if (score >= 6)
+    if (score >= HIGH_RISK_SCORE_THRESHOLD)
         return 'high';
-    if (score >= 3)
+    if (score >= ELEVATED_RISK_SCORE_THRESHOLD)
         return 'medium';
     return 'low';
 }
@@ -155,7 +157,7 @@ function combineScore(baseScore, trustScore, overrideReason) {
 }
 function buildSummary(mode, dominantDriver, overrideReason) {
     if (overrideReason === 'honeypot_exit_risk') {
-        return 'Risk is high because available checks suggest serious selling or transfer restrictions, which can make exits unreliable or impossible.';
+        return 'Honeypot risk detected: available checks suggest serious selling or transfer restrictions, which can make exits unreliable or impossible.';
     }
     if (overrideReason === 'thin_liquidity_weak_visibility') {
         return 'Risk is high because thin liquidity, very small scale, and limited verification make price behavior and trust quality harder to rely on.';
@@ -181,7 +183,7 @@ function buildSummary(mode, dominantDriver, overrideReason) {
 }
 function summarizeTrustChecks(overrideReason, trustLabel) {
     if (overrideReason === 'honeypot_exit_risk') {
-        return 'Available checks suggest users may face serious selling or transfer restrictions, making this a high-risk setup.';
+        return 'Available checks suggest users may face serious selling or transfer restrictions, meaning they may struggle to sell or exit normally.';
     }
     if (overrideReason === 'thin_liquidity_weak_visibility') {
         return 'Trust checks reinforce a fragile setup, with weak liquidity visibility and limited market history.';

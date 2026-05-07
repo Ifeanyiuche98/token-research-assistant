@@ -118,7 +118,11 @@ function buildRiskCandidates(response: ResearchResponse) {
     risks.push('Short market history still limits confidence in the setup.');
   }
 
-  if (risk?.summaryMode === 'stable') {
+  if (risk?.summaryMode === 'mixed_cautious' && risk.dominantDriver === 'trust' && risks.length < 3) {
+    risks.push('Trust visibility remains weaker than the cleaner surface metrics suggest.');
+  }
+
+  if (risk?.summaryMode === 'stable' && risks.length === 0) {
     if (sector === 'Layer 1' || sector === 'Exchange' || sector === 'Infrastructure' || sector === 'Stablecoin') {
       risks.push('Even stronger assets can still reprice quickly during broader crypto drawdowns.');
     } else {
@@ -126,15 +130,11 @@ function buildRiskCandidates(response: ResearchResponse) {
     }
   }
 
-  if (risk?.summaryMode === 'stable_watchful') {
+  if (risk?.summaryMode === 'stable_watchful' && risks.length < 2) {
     risks.push('The setup looks mostly healthy, but the softer signals still deserve monitoring.');
   }
 
-  if (risk?.summaryMode === 'mixed_cautious' && risk.dominantDriver === 'trust') {
-    risks.push('Trust visibility remains weaker than the cleaner surface metrics suggest.');
-  }
-
-  if (risk?.summaryMode === 'high_risk_fragile') {
+  if (risk?.summaryMode === 'high_risk_fragile' && risks.length < 3) {
     risks.push('Short-term positives do not outweigh the underlying structural fragility.');
   }
 

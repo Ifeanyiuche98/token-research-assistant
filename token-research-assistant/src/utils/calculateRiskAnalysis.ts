@@ -18,10 +18,13 @@ function createSignal(key: RiskSignal['key'], label: string, value: string, impa
   return { key, label, value, impact };
 }
 
+const HIGH_RISK_SCORE_THRESHOLD = 5.5;
+const ELEVATED_RISK_SCORE_THRESHOLD = 3;
+
 function scoreToLevel(score: number | null): RiskLevel {
   if (score === null) return 'unknown';
-  if (score >= 6) return 'high';
-  if (score >= 3) return 'medium';
+  if (score >= HIGH_RISK_SCORE_THRESHOLD) return 'high';
+  if (score >= ELEVATED_RISK_SCORE_THRESHOLD) return 'medium';
   return 'low';
 }
 

@@ -99,7 +99,7 @@ function formatRiskLevel(response: ResearchResponse) {
 
 function formatRiskScore(response: ResearchResponse) {
   const score = response.result?.risk?.score;
-  return score === null || score === undefined ? '—' : `${score}/100`;
+  return score === null || score === undefined ? '—' : `${score}/10`;
 }
 
 function formatRiskSummary(response: ResearchResponse) {

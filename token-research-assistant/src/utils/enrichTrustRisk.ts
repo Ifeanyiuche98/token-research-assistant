@@ -117,17 +117,20 @@ function deriveTrustScore(input: { honeypot: boolean | null; liquidityRisk: Trus
   return Math.max(0, Math.min(10, Number(score.toFixed(1))));
 }
 
+const HIGH_RISK_SCORE_THRESHOLD = 5.5;
+const ELEVATED_RISK_SCORE_THRESHOLD = 3;
+
 function deriveTrustLabel(score: number | null): TrustRiskLabel {
   if (score === null) return null;
-  if (score >= 7) return 'danger';
-  if (score >= 4) return 'warning';
+  if (score >= HIGH_RISK_SCORE_THRESHOLD) return 'danger';
+  if (score >= ELEVATED_RISK_SCORE_THRESHOLD) return 'warning';
   return 'safe';
 }
 
 function scoreToLevel(score: number | null): RiskLevel {
   if (score === null) return 'unknown';
-  if (score >= 6) return 'high';
-  if (score >= 3) return 'medium';
+  if (score >= HIGH_RISK_SCORE_THRESHOLD) return 'high';
+  if (score >= ELEVATED_RISK_SCORE_THRESHOLD) return 'medium';
   return 'low';
 }
 
@@ -182,7 +185,7 @@ function combineScore(baseScore: number | null, trustScore: number | null, overr
 
 function buildSummary(mode: RiskSummaryMode, dominantDriver: RiskDriver, overrideReason: RiskOverrideReason) {
   if (overrideReason === 'honeypot_exit_risk') {
-    return 'Risk is high because available checks suggest serious selling or transfer restrictions, which can make exits unreliable or impossible.';
+    return 'Honeypot risk detected: available checks suggest serious selling or transfer restrictions, which can make exits unreliable or impossible.';
   }
 
   if (overrideReason === 'thin_liquidity_weak_visibility') {
@@ -211,7 +214,7 @@ function buildSummary(mode: RiskSummaryMode, dominantDriver: RiskDriver, overrid
 
 function summarizeTrustChecks(overrideReason: RiskOverrideReason, trustLabel: TrustRiskLabel) {
   if (overrideReason === 'honeypot_exit_risk') {
-    return 'Available checks suggest users may face serious selling or transfer restrictions, making this a high-risk setup.';
+    return 'Available checks suggest users may face serious selling or transfer restrictions, meaning they may struggle to sell or exit normally.';
   }
 
   if (overrideReason === 'thin_liquidity_weak_visibility') {
