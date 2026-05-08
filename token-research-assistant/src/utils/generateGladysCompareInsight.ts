@@ -66,6 +66,10 @@ function unique(items: Array<string | null | undefined>) {
   return [...new Set(items.filter((item): item is string => Boolean(item && item.trim())))];
 }
 
+function replaceSideLabels(summary: string, leftName: string, rightName: string) {
+  return summary.replace(/\bLeft\b/g, leftName).replace(/\bRight\b/g, rightName).replace(/\bleft\b/g, leftName).replace(/\bright\b/g, rightName);
+}
+
 export function generateGladysCompareInsight(comparison: CompareResponse): GladysCompareInsight {
   const { left, right, comparativeIntelligence } = comparison;
   const leftName = getDisplayName(left);
@@ -98,7 +102,9 @@ export function generateGladysCompareInsight(comparison: CompareResponse): Glady
     strongerSide === 'left' && leftConfidence > rightConfidence ? `${leftName} is coming through the stronger source path, which improves confidence in the read.` : null,
     strongerSide === 'right' && rightConfidence > leftConfidence ? `${rightName} is coming through the stronger source path, which improves confidence in the read.` : null,
     comparativeIntelligence?.items.find((item) => item.key === 'stability' && item.betterSide === strongerSide)?.summary
-  ]).slice(0, 3);
+  ])
+    .map((summary) => replaceSideLabels(summary, leftName, rightName))
+    .slice(0, 3);
 
   const headline =
     strongerSide === 'tie'
@@ -112,15 +118,15 @@ export function generateGladysCompareInsight(comparison: CompareResponse): Glady
 
   const caution =
     strongerSide === 'tie'
-      ? 'Main caution: similarity in some metrics does not mean both assets carry the same trust level or downside profile.'
-      : `Main caution: even though ${strongerLabel} looks better on balance, that does not make ${weakerLabel} automatically uninteresting or ${strongerLabel} automatically safe.`;
+      ? 'Main caution: similar metrics do not mean both assets carry the same trust or downside profile.'
+      : `Main caution: ${strongerLabel} looks better on balance, but that does not make ${weakerLabel} weak by default or ${strongerLabel} automatically safe.`;
 
   const confidenceNote =
     leftConfidence === rightConfidence
-      ? 'Confidence: moderate, because both sides are being judged through broadly similar source confidence.'
+      ? 'Confidence: moderate, because both assets come through similarly reliable source paths.'
       : strongerSide === 'tie'
         ? 'Confidence: moderate, but source quality is uneven enough that manual verification still matters.'
-        : `Confidence: moderate, with slightly better confidence on ${strongerLabel} because its source path looks stronger.`;
+        : `Confidence: moderate, with a slightly cleaner read on ${strongerLabel} because its source path looks stronger.`;
 
   const tone: SignalTone =
     strongerSide === 'tie' ? 'caution' : riskEdge === strongerSide ? 'positive' : 'neutral';
