@@ -1,5 +1,6 @@
 import type { CompareResponse, ComparisonInsightItem } from '../types/compare';
 import type { ResearchResponse, SignalTone } from '../types/research';
+import { GladysCompareCard } from './GladysCompareCard';
 
 type TokenComparisonProps = {
   comparison: CompareResponse;
@@ -354,6 +355,8 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
         <h2>Side-by-side token comparison</h2>
         <p className="state-copy comparison-copy">A compact comparison using the existing research resolver for both lookups.</p>
       </div>
+
+      <GladysCompareCard comparison={comparison} />
 
       <section className="comparison-section comparison-identity-section">
         <div className="note-panel-header">
