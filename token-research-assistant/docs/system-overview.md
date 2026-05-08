@@ -381,7 +381,8 @@ Token Intel now behaves much more like a risk-aware decision engine instead of a
 - Trust / risk scoring is much stronger now, but calibration may still need refinement in edge CoinGecko cases
 - DEX fallback currently depends on DEXScreener only
 - No Dextools integration yet
-- GLADYS AI layer is not yet integrated into the live UX as an active explanation engine
+- GLADYS v1 is currently deterministic and rule-based rather than OpenAI-backed
+- GLADYS is currently implemented in single-token mode only; compare-mode verdicts are not yet live
 - No historical risk tracking yet
 - No wallet-behavior / smart-money / on-chain event intelligence yet
 
@@ -391,33 +392,55 @@ Token Intel now behaves much more like a risk-aware decision engine instead of a
 
 The project is now in **Phase 3 — GLADYS (AI Intelligence Layer)**.
 
-### Goal
-Add intelligent interpretation, explanation, and guided reasoning directly into the product UX.
+### Current Phase 3 Status
+Phase 3 has already **started**.
 
-### Phase 3 Tasks
-- Integrate OpenAI (Codex / GPT models)
+A first-pass **GLADYS v1** layer is already implemented as a deterministic explanation surface in single-token mode.
+
+Implemented so far:
+- dedicated `GladysInsightCard` UI in the main dashboard
+- deterministic `buildGladysInput(response)` adapter
+- deterministic `generateGladysInsight(input)` summarizer
+- live rendering for:
+  - headline
+  - summary
+  - biggest concern
+  - confidence note
+  - next move
+  - supporting bullets
+- styling and UX treatment for GLADYS insight presentation
+
+### Goal
+Evolve GLADYS from a deterministic explanation layer into a richer intelligence layer without weakening the existing trust model.
+
+### Next Phase 3 Tasks
+- Integrate OpenAI (Codex / GPT models) behind the existing GLADYS contract
 - Enable:
   - AI-generated summaries
   - richer risk explanations
   - simplified insights
   - beginner-friendly interpretation
   - guided explanation for mixed-signal tokens
+- Extend GLADYS into compare mode with structured verdicts
+- Preserve the current deterministic fallback path when AI is unavailable
 
 ### Expected Outcome
 - Human-like explanations
 - Beginner-friendly UX
 - Higher perceived value
 - Better conversion into a premium intelligence product
+- Safer continuity because deterministic GLADYS still works when AI is unavailable
 
 ---
 
 ## 9. Near-Term Roadmap
 
 ### Phase 3 Priorities
-- Define GLADYS interaction model inside the product
-- Decide where deterministic logic ends and AI explanation begins
-- Add AI explanation layer without breaking current deterministic outputs
-- Preserve current response structure while enriching user-facing insight quality
+- Validate and refine the current GLADYS v1 deterministic outputs across clean, elevated, honeypot, fragile, and DEX-only cases
+- Keep the current deterministic-vs-AI boundary clear: structured facts from the engine, explanation from GLADYS
+- Integrate OpenAI behind the existing GLADYS surface without breaking current deterministic outputs
+- Preserve the current response structure while enriching user-facing insight quality
+- Add compare-mode GLADYS verdicts after single-token GLADYS quality is considered stable
 
 ### Next Intelligence Expansion After Phase 3
 - Comparative verdict engine
