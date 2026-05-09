@@ -16,6 +16,7 @@
 - Decision made on 2026-05-09: compare verdict logic should live in the shared compare response contract rather than remain UI-only.
 - New resume point after that decision: strengthen compare heuristics on the shared contract path or add OpenAI-backed GLADYS v2 while keeping the shared deterministic verdict as fallback.
 - As of 2026-05-09, compare heuristics have now been strengthened beyond simple win-counting: the shared deterministic verdict weighs risk severity, source confidence, limited-data penalties, and small-edge tie handling.
+- Dedicated compare-verdict tests were added on 2026-05-09 to lock down severe-risk overrides, mixed-data tie behavior, and token-name reason rendering.
 
 ### Working style preferences
 - Ifeanyi explicitly wants step-by-step continuity captured in memory as work progresses so recovery after outages or unforeseen interruptions is easy.

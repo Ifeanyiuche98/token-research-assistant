@@ -125,12 +125,15 @@ function chooseOutcome(left: SideAssessment, right: SideAssessment): CompareOutc
   if (right.severeRisk && !left.severeRisk) return 'left';
 
   const scoreDiff = left.score - right.score;
-  if (Math.abs(scoreDiff) >= 2) {
+  const requiresWiderEdge = left.limitedData || right.limitedData;
+  const decisiveThreshold = requiresWiderEdge ? 3 : 2;
+
+  if (Math.abs(scoreDiff) >= decisiveThreshold) {
     return scoreDiff > 0 ? 'left' : 'right';
   }
 
   if (left.limitedData !== right.limitedData) {
-    return left.limitedData ? 'right' : 'left';
+    return 'tie';
   }
 
   return 'tie';
@@ -168,13 +171,13 @@ function buildReasons(
   const losingAssessment = winningSide === 'left' ? right : left;
 
   return unique([
+    losingAssessment.severeRisk ? `${losingAssessment.name} has at least one severe caution signal weighing on the comparison.` : null,
+    winningAssessment.limitedData === false && losingAssessment.limitedData === true ? `${winningAssessment.name} has the cleaner data path, while ${losingAssessment.name} is more limited or fallback-heavy.` : null,
+    riskEdge === winningSide ? `${winningAssessment.name} carries the cleaner visible risk posture right now.` : null,
     comparison.comparativeIntelligence?.items.find((item) => item.key === 'liquidity' && item.betterSide === winningSide)?.summary,
     comparison.comparativeIntelligence?.items.find((item) => item.key === 'size' && item.betterSide === winningSide)?.summary,
     comparison.comparativeIntelligence?.items.find((item) => item.key === 'stability' && item.betterSide === winningSide)?.summary,
-    riskEdge === winningSide ? `${winningAssessment.name} carries the cleaner visible risk posture right now.` : null,
-    winningAssessment.sourceConfidence > losingAssessment.sourceConfidence ? `${winningAssessment.name} comes through the stronger source path, which improves confidence in the read.` : null,
-    winningAssessment.limitedData === false && losingAssessment.limitedData === true ? `${winningAssessment.name} has the cleaner data path, while ${losingAssessment.name} is more limited or fallback-heavy.` : null,
-    losingAssessment.severeRisk ? `${losingAssessment.name} has at least one severe caution signal weighing on the comparison.` : null
+    winningAssessment.sourceConfidence > losingAssessment.sourceConfidence ? `${winningAssessment.name} comes through the stronger source path, which improves confidence in the read.` : null
   ])
     .map((summary) => replaceSideLabels(summary, left.name, right.name))
     .slice(0, 3);
