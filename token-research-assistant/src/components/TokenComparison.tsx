@@ -331,12 +331,12 @@ function getComparisonInsightBadgeClass(item: ComparisonInsightItem) {
   }
 }
 
-function getComparisonInsightBadgeLabel(item: ComparisonInsightItem) {
+function getComparisonInsightBadgeLabel(item: ComparisonInsightItem, left: ResearchResponse, right: ResearchResponse) {
   switch (item.betterSide) {
     case 'left':
-      return 'Left stronger';
+      return `${getDisplayName(left)} stronger`;
     case 'right':
-      return 'Right stronger';
+      return `${getDisplayName(right)} stronger`;
     case 'tie':
       return 'Tie';
     default:
@@ -439,7 +439,7 @@ export function TokenComparison({ comparison }: TokenComparisonProps) {
               <article key={item.key} className="comparison-token-card">
                 <div className="comparison-token-top">
                   <h3>{item.label}</h3>
-                  <span className={`result-status-badge ${getComparisonInsightBadgeClass(item)}`}>{getComparisonInsightBadgeLabel(item)}</span>
+                  <span className={`result-status-badge ${getComparisonInsightBadgeClass(item)}`}>{getComparisonInsightBadgeLabel(item, left, right)}</span>
                 </div>
                 <p className="comparison-side-message comparison-side-message-tight">{item.summary}</p>
               </article>
