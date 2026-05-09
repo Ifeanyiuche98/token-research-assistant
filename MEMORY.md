@@ -15,6 +15,7 @@
 - Latest saved compare polish commit on 2026-05-08: `5a981f8` (`Polish GLADYS compare verdict copy`).
 - Decision made on 2026-05-09: compare verdict logic should live in the shared compare response contract rather than remain UI-only.
 - New resume point after that decision: strengthen compare heuristics on the shared contract path or add OpenAI-backed GLADYS v2 while keeping the shared deterministic verdict as fallback.
+- As of 2026-05-09, compare heuristics have now been strengthened beyond simple win-counting: the shared deterministic verdict weighs risk severity, source confidence, limited-data penalties, and small-edge tie handling.
 
 ### Working style preferences
 - Ifeanyi explicitly wants step-by-step continuity captured in memory as work progresses so recovery after outages or unforeseen interruptions is easy.

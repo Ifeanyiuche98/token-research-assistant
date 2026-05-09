@@ -1,6 +1,19 @@
 import type { CompareResponse, GladysCompareInsight } from '../types/compare';
 import type { RiskLevel, SignalTone } from '../types/research';
 
+type CompareSide = 'left' | 'right';
+type CompareOutcome = CompareSide | 'tie';
+
+type SideAssessment = {
+  side: CompareSide;
+  name: string;
+  score: number;
+  sourceConfidence: number;
+  limitedData: boolean;
+  severeRisk: boolean;
+  riskLevel: RiskLevel;
+};
+
 function getDisplayName(response: CompareResponse['left']) {
   return response.result?.identity.name ?? response.query.raw;
 }
@@ -26,15 +39,15 @@ function riskWeight(level: RiskLevel) {
     case 'low':
       return 3;
     case 'medium':
-      return 2;
-    case 'high':
-      return 0;
-    default:
       return 1;
+    case 'high':
+      return -3;
+    default:
+      return 0;
   }
 }
 
-function summarizeRiskEdge(left: CompareResponse['left'], right: CompareResponse['right']) {
+function summarizeRiskEdge(left: CompareResponse['left'], right: CompareResponse['right']): CompareOutcome {
   const leftLevel = getRiskLevel(left);
   const rightLevel = getRiskLevel(right);
   const leftScore = getRiskScore(left);
@@ -44,11 +57,59 @@ function summarizeRiskEdge(left: CompareResponse['left'], right: CompareResponse
     return riskWeight(leftLevel) > riskWeight(rightLevel) ? 'left' : 'right';
   }
 
-  if (leftScore !== null && rightScore !== null && leftScore !== rightScore) {
-    return leftScore < rightScore ? 'left' : 'right';
+  if (leftScore !== null && rightScore !== null) {
+    const diff = Math.abs(leftScore - rightScore);
+    if (diff >= 0.75) {
+      return leftScore < rightScore ? 'left' : 'right';
+    }
   }
 
   return 'tie';
+}
+
+function hasSevereRisk(response: CompareResponse['left']) {
+  const risk = response.result?.risk;
+  return risk?.overrideReason === 'honeypot_exit_risk' || risk?.level === 'high' || risk?.details?.trustLabel === 'danger';
+}
+
+function hasLimitedData(response: CompareResponse['left']) {
+  return response.status !== 'live' || response.result?.fallback.used === true || !response.result?.market;
+}
+
+function countSideWins(comparison: CompareResponse, side: CompareSide) {
+  return (comparison.comparativeIntelligence?.items ?? []).filter((item) => item.betterSide === side).length;
+}
+
+function buildSideAssessment(comparison: CompareResponse, side: CompareSide): SideAssessment {
+  const response = comparison[side];
+  const name = getDisplayName(response);
+  const sourceConfidence = getSourceConfidence(response);
+  const limitedData = hasLimitedData(response);
+  const severeRisk = hasSevereRisk(response);
+  const riskLevel = getRiskLevel(response);
+  const riskScore = getRiskScore(response);
+  const comparativeWins = countSideWins(comparison, side);
+
+  let score = comparativeWins * 2;
+  score += riskWeight(riskLevel) * 2;
+  score += sourceConfidence - 2;
+
+  if (riskScore !== null) {
+    score += Math.max(-2, Math.min(2, (5 - riskScore) / 2));
+  }
+
+  if (limitedData) score -= 2;
+  if (severeRisk) score -= 4;
+
+  return {
+    side,
+    name,
+    score,
+    sourceConfidence,
+    limitedData,
+    severeRisk,
+    riskLevel
+  };
 }
 
 function unique(items: Array<string | null | undefined>) {
@@ -59,66 +120,98 @@ function replaceSideLabels(summary: string, leftName: string, rightName: string)
   return summary.replace(/\bLeft\b/g, leftName).replace(/\bRight\b/g, rightName).replace(/\bleft\b/g, leftName).replace(/\bright\b/g, rightName);
 }
 
-export function generateGladysCompareInsight(comparison: CompareResponse): GladysCompareInsight {
-  const { left, right, comparativeIntelligence } = comparison;
-  const leftName = getDisplayName(left);
-  const rightName = getDisplayName(right);
+function chooseOutcome(left: SideAssessment, right: SideAssessment): CompareOutcome {
+  if (left.severeRisk && !right.severeRisk) return 'right';
+  if (right.severeRisk && !left.severeRisk) return 'left';
 
-  const wins = { left: 0, right: 0 };
-  for (const item of comparativeIntelligence?.items ?? []) {
-    if (item.betterSide === 'left') wins.left += 1;
-    if (item.betterSide === 'right') wins.right += 1;
+  const scoreDiff = left.score - right.score;
+  if (Math.abs(scoreDiff) >= 2) {
+    return scoreDiff > 0 ? 'left' : 'right';
   }
 
-  const riskEdge = summarizeRiskEdge(left, right);
-  if (riskEdge === 'left') wins.left += 1;
-  if (riskEdge === 'right') wins.right += 1;
+  if (left.limitedData !== right.limitedData) {
+    return left.limitedData ? 'right' : 'left';
+  }
 
-  const leftConfidence = getSourceConfidence(left);
-  const rightConfidence = getSourceConfidence(right);
-  if (leftConfidence > rightConfidence) wins.left += 1;
-  if (rightConfidence > leftConfidence) wins.right += 1;
+  return 'tie';
+}
 
-  const strongerSide = wins.left === wins.right ? 'tie' : wins.left > wins.right ? 'left' : 'right';
-  const strongerLabel = strongerSide === 'left' ? leftName : strongerSide === 'right' ? rightName : 'Neither side';
-  const weakerLabel = strongerSide === 'left' ? rightName : strongerSide === 'right' ? leftName : 'neither asset';
+function getOutcomeLabels(outcome: CompareOutcome, left: SideAssessment, right: SideAssessment) {
+  if (outcome === 'left') {
+    return { strongerLabel: left.name, weakerLabel: right.name };
+  }
 
-  const reasons = unique([
-    comparativeIntelligence?.items.find((item) => item.key === 'liquidity' && item.betterSide === strongerSide)?.summary,
-    comparativeIntelligence?.items.find((item) => item.key === 'size' && item.betterSide === strongerSide)?.summary,
-    riskEdge === 'left' ? `${leftName} carries the cleaner visible risk posture right now.` : null,
-    riskEdge === 'right' ? `${rightName} carries the cleaner visible risk posture right now.` : null,
-    strongerSide === 'left' && leftConfidence > rightConfidence ? `${leftName} is coming through the stronger source path, which improves confidence in the read.` : null,
-    strongerSide === 'right' && rightConfidence > leftConfidence ? `${rightName} is coming through the stronger source path, which improves confidence in the read.` : null,
-    comparativeIntelligence?.items.find((item) => item.key === 'stability' && item.betterSide === strongerSide)?.summary
+  if (outcome === 'right') {
+    return { strongerLabel: right.name, weakerLabel: left.name };
+  }
+
+  return { strongerLabel: 'Neither side', weakerLabel: 'neither asset' };
+}
+
+function buildReasons(
+  comparison: CompareResponse,
+  outcome: CompareOutcome,
+  left: SideAssessment,
+  right: SideAssessment,
+  riskEdge: CompareOutcome
+) {
+  if (outcome === 'tie') {
+    return unique([
+      comparison.comparativeIntelligence?.summary,
+      left.limitedData || right.limitedData ? 'Data quality is uneven enough that the comparison still needs manual verification.' : null,
+      riskEdge === 'tie' ? 'Neither side has a decisive risk advantage from the visible data.' : null
+    ]).slice(0, 3);
+  }
+
+  const winningSide = outcome;
+  const winningAssessment = winningSide === 'left' ? left : right;
+  const losingAssessment = winningSide === 'left' ? right : left;
+
+  return unique([
+    comparison.comparativeIntelligence?.items.find((item) => item.key === 'liquidity' && item.betterSide === winningSide)?.summary,
+    comparison.comparativeIntelligence?.items.find((item) => item.key === 'size' && item.betterSide === winningSide)?.summary,
+    comparison.comparativeIntelligence?.items.find((item) => item.key === 'stability' && item.betterSide === winningSide)?.summary,
+    riskEdge === winningSide ? `${winningAssessment.name} carries the cleaner visible risk posture right now.` : null,
+    winningAssessment.sourceConfidence > losingAssessment.sourceConfidence ? `${winningAssessment.name} comes through the stronger source path, which improves confidence in the read.` : null,
+    winningAssessment.limitedData === false && losingAssessment.limitedData === true ? `${winningAssessment.name} has the cleaner data path, while ${losingAssessment.name} is more limited or fallback-heavy.` : null,
+    losingAssessment.severeRisk ? `${losingAssessment.name} has at least one severe caution signal weighing on the comparison.` : null
   ])
-    .map((summary) => replaceSideLabels(summary, leftName, rightName))
+    .map((summary) => replaceSideLabels(summary, left.name, right.name))
     .slice(0, 3);
+}
 
-  const headline =
-    strongerSide === 'tie'
-      ? 'GLADYS: No clean winner yet'
-      : `GLADYS: ${strongerLabel} looks structurally stronger`;
+export function generateGladysCompareInsight(comparison: CompareResponse): GladysCompareInsight {
+  const left = buildSideAssessment(comparison, 'left');
+  const right = buildSideAssessment(comparison, 'right');
+  const riskEdge = summarizeRiskEdge(comparison.left, comparison.right);
+  const outcome = chooseOutcome(left, right);
+  const { strongerLabel, weakerLabel } = getOutcomeLabels(outcome, left, right);
+  const reasons = buildReasons(comparison, outcome, left, right, riskEdge);
+
+  const headline = outcome === 'tie' ? 'GLADYS: No clean winner yet' : `GLADYS: ${strongerLabel} looks structurally stronger`;
 
   const verdict =
-    strongerSide === 'tie'
-      ? `${leftName} and ${rightName} look mixed overall, so this comparison is better treated as a trade-off than a clean winner-versus-loser setup.`
-      : `${strongerLabel} currently looks stronger overall, while ${weakerLabel} needs more caution unless its weaker signals improve.`;
+    outcome === 'tie'
+      ? `${left.name} and ${right.name} still look mixed overall, so this is better treated as a trade-off than a clear winner-versus-loser setup.`
+      : `${strongerLabel} currently looks stronger on balance, while ${weakerLabel} needs more caution unless its weaker signals improve.`;
 
   const caution =
-    strongerSide === 'tie'
-      ? 'Main caution: similar metrics do not mean both assets carry the same trust or downside profile.'
-      : `Main caution: ${strongerLabel} looks better on balance, but that does not make ${weakerLabel} weak by default or ${strongerLabel} automatically safe.`;
+    outcome === 'tie'
+      ? 'Main caution: similar-looking metrics still do not mean both assets carry the same trust or downside profile.'
+      : `${strongerLabel} looks better on balance, but that still does not make it automatically safe or ${weakerLabel} automatically weak.`;
 
   const confidenceNote =
-    leftConfidence === rightConfidence
-      ? 'Confidence: moderate, because both assets come through similarly reliable source paths.'
-      : strongerSide === 'tie'
-        ? 'Confidence: moderate, but source quality is uneven enough that manual verification still matters.'
-        : `Confidence: moderate, with a slightly cleaner read on ${strongerLabel} because its source path looks stronger.`;
+    outcome === 'tie'
+      ? left.limitedData || right.limitedData
+        ? 'Confidence: limited to moderate, because the comparison still includes uneven or fallback-heavy data.'
+        : 'Confidence: moderate, because neither side created a decisive enough edge to call this cleanly.'
+      : (outcome === 'left' ? left : right).limitedData
+        ? `Confidence: moderate, but ${strongerLabel} still has some data limitations worth verifying manually.`
+        : left.sourceConfidence === right.sourceConfidence
+          ? 'Confidence: moderate, because both assets come through similarly reliable source paths.'
+          : `Confidence: moderate, with a cleaner read on ${strongerLabel} because its source path looks stronger.`;
 
-  const tone: SignalTone =
-    strongerSide === 'tie' ? 'caution' : riskEdge === strongerSide ? 'positive' : 'neutral';
+  const tone: SignalTone = outcome === 'tie' ? 'caution' : (outcome === riskEdge || (outcome === 'left' ? right : left).severeRisk ? 'positive' : 'neutral');
 
   return {
     headline,
