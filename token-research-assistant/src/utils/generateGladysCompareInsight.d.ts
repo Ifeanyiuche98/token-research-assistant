@@ -1,13 +1,2 @@
-import type { CompareResponse } from '../types/compare';
-import type { SignalTone } from '../types/research';
-export type GladysCompareInsight = {
-    headline: string;
-    verdict: string;
-    caution: string;
-    confidenceNote: string;
-    strongerSideLabel: string;
-    weakerSideLabel: string;
-    tone: SignalTone;
-    reasons: string[];
-};
+import type { CompareResponse, GladysCompareInsight } from '../types/compare';
 export declare function generateGladysCompareInsight(comparison: CompareResponse): GladysCompareInsight;
