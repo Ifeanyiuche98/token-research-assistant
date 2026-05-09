@@ -1,16 +1,5 @@
-import type { CompareResponse } from '../types/compare';
+import type { CompareResponse, GladysCompareInsight } from '../types/compare';
 import type { RiskLevel, SignalTone } from '../types/research';
-
-export type GladysCompareInsight = {
-  headline: string;
-  verdict: string;
-  caution: string;
-  confidenceNote: string;
-  strongerSideLabel: string;
-  weakerSideLabel: string;
-  tone: SignalTone;
-  reasons: string[];
-};
 
 function getDisplayName(response: CompareResponse['left']) {
   return response.result?.identity.name ?? response.query.raw;

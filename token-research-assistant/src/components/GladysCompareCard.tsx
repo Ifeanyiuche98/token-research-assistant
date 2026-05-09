@@ -1,5 +1,4 @@
 import type { CompareResponse } from '../types/compare';
-import { generateGladysCompareInsight } from '../utils/generateGladysCompareInsight';
 
 function getToneMeta(tone: 'positive' | 'negative' | 'caution' | 'neutral') {
   switch (tone) {
@@ -19,7 +18,9 @@ type GladysCompareCardProps = {
 };
 
 export function GladysCompareCard({ comparison }: GladysCompareCardProps) {
-  const insight = generateGladysCompareInsight(comparison);
+  const insight = comparison.gladysInsight;
+  if (!insight) return null;
+
   const tone = getToneMeta(insight.tone);
 
   return (

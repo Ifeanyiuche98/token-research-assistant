@@ -13,7 +13,8 @@
   - compare-mode GLADYS verdict card is implemented and polished,
   - roadmap docs are aligned with the real Phase 3 state.
 - Latest saved compare polish commit on 2026-05-08: `5a981f8` (`Polish GLADYS compare verdict copy`).
-- Next resume point after the latest outage/power interruption: decide whether compare verdict logic should remain client-side or move into shared compare response contracts, then continue with stronger compare heuristics or OpenAI-backed GLADYS v2.
+- Decision made on 2026-05-09: compare verdict logic should live in the shared compare response contract rather than remain UI-only.
+- New resume point after that decision: strengthen compare heuristics on the shared contract path or add OpenAI-backed GLADYS v2 while keeping the shared deterministic verdict as fallback.
 
 ### Working style preferences
 - Ifeanyi explicitly wants step-by-step continuity captured in memory as work progresses so recovery after outages or unforeseen interruptions is easy.

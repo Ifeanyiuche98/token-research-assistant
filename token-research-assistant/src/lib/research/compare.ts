@@ -1,6 +1,7 @@
 import { resolveResearch } from './endpoint';
 import { normalizeQuery } from './query';
 import { generateComparativeIntelligence } from '../../utils/generateComparativeIntelligence';
+import { generateGladysCompareInsight } from '../../utils/generateGladysCompareInsight';
 import type { CompareResponse } from '../../types/compare';
 
 export async function resolveComparison(leftQueryValue: string, rightQueryValue: string): Promise<{ statusCode: number; body: CompareResponse | { message: string } }> {
@@ -26,16 +27,22 @@ export async function resolveComparison(leftQueryValue: string, rightQueryValue:
   }
 
   const [left, right] = await Promise.all([resolveResearch(leftTrimmed), resolveResearch(rightTrimmed)]);
+  const comparativeIntelligence = generateComparativeIntelligence(left.body, right.body);
+  const baseComparison: CompareResponse = {
+    left: left.body,
+    right: right.body,
+    comparativeIntelligence,
+    gladysInsight: null,
+    meta: {
+      generatedAt: new Date().toISOString()
+    }
+  };
 
   return {
     statusCode: 200,
     body: {
-      left: left.body,
-      right: right.body,
-      comparativeIntelligence: generateComparativeIntelligence(left.body, right.body),
-      meta: {
-        generatedAt: new Date().toISOString()
-      }
+      ...baseComparison,
+      gladysInsight: generateGladysCompareInsight(baseComparison)
     }
   };
 }
