@@ -4,6 +4,8 @@ import { generateSignalInterpretation } from '../src/utils/generateSignalInterpr
 import { generateResearchBrief } from '../src/utils/generateResearchBrief.js';
 import { mapToSector } from '../src/utils/mapToSector.js';
 import { getSectorIntelligence } from '../src/utils/getSectorIntelligence.js';
+import { generateComparativeIntelligence } from '../src/utils/generateComparativeIntelligence.js';
+import { generateGladysCompareInsight } from '../src/utils/generateGladysCompareInsight.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -194,6 +196,10 @@ async function invokeResearch(query) {
   return result;
 }
 
+function normalizeQuery(value) {
+  return value.trim().toLowerCase();
+}
+
 export default async function handler(req, res) {
   const leftQuery = getQueryValue(req.query?.a).trim();
   const rightQuery = getQueryValue(req.query?.b).trim();
@@ -205,7 +211,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (leftQuery.toLowerCase() === rightQuery.toLowerCase()) {
+    if (normalizeQuery(leftQuery) === normalizeQuery(rightQuery)) {
       return json(res, 400, {
         message: 'Choose two different tokens or projects to compare.'
       });
@@ -213,12 +219,22 @@ export default async function handler(req, res) {
 
     const [left, right] = await Promise.all([invokeResearch(leftQuery), invokeResearch(rightQuery)]);
 
-    return json(res, 200, {
-      left: ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body))))),
-      right: ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body))))),
+    const leftBody = ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(left.body)))));
+    const rightBody = ensureSectorIntelligenceOnResponse(ensureSectorOnResponse(ensureResearchBriefOnResponse(ensureSignalInterpretationOnResponse(ensureRiskOnResponse(right.body)))));
+    const comparativeIntelligence = generateComparativeIntelligence(leftBody, rightBody);
+    const baseComparison = {
+      left: leftBody,
+      right: rightBody,
+      comparativeIntelligence,
+      gladysInsight: null,
       meta: {
         generatedAt: new Date().toISOString()
       }
+    };
+
+    return json(res, 200, {
+      ...baseComparison,
+      gladysInsight: generateGladysCompareInsight(baseComparison)
     });
   } catch (error) {
     return json(res, 500, {
@@ -229,6 +245,8 @@ export default async function handler(req, res) {
       },
       left: null,
       right: null,
+      comparativeIntelligence: null,
+      gladysInsight: null,
       meta: {
         generatedAt: new Date().toISOString()
       }
