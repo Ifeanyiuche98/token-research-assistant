@@ -2,6 +2,7 @@ import { resolveResearch } from './endpoint';
 import { normalizeQuery } from './query';
 import { generateComparativeIntelligence } from '../../utils/generateComparativeIntelligence';
 import { generateGladysCompareInsight } from '../../utils/generateGladysCompareInsight';
+import { generateGladysCompareInsightV2 } from '../../utils/generateGladysCompareInsightV2';
 export async function resolveComparison(leftQueryValue, rightQueryValue) {
     const leftTrimmed = leftQueryValue.trim();
     const rightTrimmed = rightQueryValue.trim();
@@ -28,15 +29,22 @@ export async function resolveComparison(leftQueryValue, rightQueryValue) {
         right: right.body,
         comparativeIntelligence,
         gladysInsight: null,
+        gladysV2Insight: null,
         meta: {
             generatedAt: new Date().toISOString()
         }
     };
+    const gladysInsight = generateGladysCompareInsight(baseComparison);
+    const comparisonWithGladys = {
+        ...baseComparison,
+        gladysInsight
+    };
+    const gladysV2Insight = await generateGladysCompareInsightV2(comparisonWithGladys);
     return {
         statusCode: 200,
         body: {
-            ...baseComparison,
-            gladysInsight: generateGladysCompareInsight(baseComparison)
+            ...comparisonWithGladys,
+            gladysV2Insight
         }
     };
 }
