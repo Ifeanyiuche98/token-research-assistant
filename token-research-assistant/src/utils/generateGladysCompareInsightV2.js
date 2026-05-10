@@ -1,5 +1,5 @@
-import { buildGladysV2Input } from './buildGladysV2Input';
-import { validateGladysV2Insight } from './validateGladysV2Insight';
+import { buildGladysV2Input } from './buildGladysV2Input.js';
+import { validateGladysV2Insight } from './validateGladysV2Insight.js';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_GLADYS_V2_MODEL = 'gpt-4.1-mini';
 function getEnvValue(key) {
