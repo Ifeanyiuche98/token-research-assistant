@@ -1,3 +1,6 @@
+function getDisplayName(response) {
+    return response.result?.identity.name ?? response.query.raw;
+}
 function getNumericValue(response, selector) {
     const value = selector(response);
     return typeof value === 'number' && Number.isFinite(value) ? value : null;
@@ -8,6 +11,8 @@ function isFallbackOrUnknown(response) {
 function compareNumericValues(leftValue, rightValue, config, left, right) {
     const leftKnown = leftValue !== null;
     const rightKnown = rightValue !== null;
+    const leftLabel = getDisplayName(left);
+    const rightLabel = getDisplayName(right);
     if (!leftKnown && !rightKnown) {
         return {
             key: config.key,
@@ -24,7 +29,7 @@ function compareNumericValues(leftValue, rightValue, config, left, right) {
                 key: config.key,
                 label: config.label,
                 betterSide: presentSide,
-                summary: config.presentSideSummary[presentSide]
+                summary: config.presentSideSummary[presentSide](leftLabel, rightLabel)
             };
         }
         return {
@@ -52,7 +57,7 @@ function compareNumericValues(leftValue, rightValue, config, left, right) {
         key: config.key,
         label: config.label,
         betterSide,
-        summary: config.presentSideSummary[betterSide]
+        summary: config.presentSideSummary[betterSide](leftLabel, rightLabel)
     };
 }
 function buildLiquidityInsight(left, right) {
@@ -61,8 +66,8 @@ function buildLiquidityInsight(left, right) {
         label: 'Liquidity',
         closeRatio: 0.1,
         presentSideSummary: {
-            left: 'Left shows stronger liquidity based on higher 24h volume.',
-            right: 'Right shows stronger liquidity based on higher 24h volume.'
+            left: (leftLabel) => `${leftLabel} shows stronger liquidity based on higher 24h volume.`,
+            right: (_leftLabel, rightLabel) => `${rightLabel} shows stronger liquidity based on higher 24h volume.`
         },
         tieSummary: 'Both assets show similar liquidity based on current 24h volume.',
         unknownSummary: 'Liquidity comparison is limited because market data is incomplete.'
@@ -74,8 +79,8 @@ function buildSizeInsight(left, right) {
         label: 'Size',
         closeRatio: 0.1,
         presentSideSummary: {
-            left: 'Left is larger by market capitalization.',
-            right: 'Right is larger by market capitalization.'
+            left: (leftLabel) => `${leftLabel} is larger by market capitalization.`,
+            right: (_leftLabel, rightLabel) => `${rightLabel} is larger by market capitalization.`
         },
         tieSummary: 'Both assets are similar in size based on market capitalization.',
         unknownSummary: 'Size comparison is limited because market data is incomplete.'
@@ -96,14 +101,16 @@ function buildStabilityInsight(left, right) {
         closeDifference: 2,
         preferLower: true,
         presentSideSummary: {
-            left: 'Left looks more stable based on smaller 24h price movement.',
-            right: 'Right looks more stable based on smaller 24h price movement.'
+            left: (leftLabel) => `${leftLabel} looks more stable based on smaller 24h price movement.`,
+            right: (_leftLabel, rightLabel) => `${rightLabel} looks more stable based on smaller 24h price movement.`
         },
         tieSummary: 'Both assets show similar short-term price stability.',
         unknownSummary: 'Stability comparison is limited because recent price-move data is incomplete.'
     }, left, right);
 }
-function buildSummary(items) {
+function buildSummary(items, left, right) {
+    const leftLabel = getDisplayName(left);
+    const rightLabel = getDisplayName(right);
     const unknownCount = items.filter((item) => item.betterSide === 'unknown').length;
     if (unknownCount >= 2) {
         return 'Comparison insight is limited because one or both assets are missing important market data.';
@@ -116,30 +123,32 @@ function buildSummary(items) {
     if (leftWins.length > 0 && rightWins.length > 0) {
         return 'The two assets are mixed across liquidity, size, and recent stability.';
     }
-    const winningSide = leftWins.length > 0 ? 'Left' : 'Right';
+    const winningSide = leftWins.length > 0 ? 'left' : 'right';
+    const winningLabel = winningSide === 'left' ? leftLabel : rightLabel;
+    const losingLabel = winningSide === 'left' ? rightLabel : leftLabel;
     const winningItems = (leftWins.length > 0 ? leftWins : rightWins).map((item) => item.key);
     const parts = [];
     if (winningItems.includes('liquidity') && winningItems.includes('size')) {
-        parts.push(`${winningSide} appears stronger on liquidity and size`);
+        parts.push(`${winningLabel} appears stronger on liquidity and size`);
     }
     else {
         if (winningItems.includes('liquidity')) {
-            parts.push(`${winningSide} appears stronger on liquidity`);
+            parts.push(`${winningLabel} appears stronger on liquidity`);
         }
         if (winningItems.includes('size')) {
-            parts.push(`${winningSide} appears larger in market size`);
+            parts.push(`${winningLabel} appears larger in market size`);
         }
     }
-    const losingSide = winningSide === 'Left' ? 'right' : 'left';
+    const losingSide = winningSide === 'left' ? 'right' : 'left';
     const stabilityItem = items.find((item) => item.key === 'stability');
     if (stabilityItem?.betterSide === 'tie') {
         parts.push('both look similar in recent price stability');
     }
     else if (stabilityItem?.betterSide === losingSide) {
-        parts.push(`${losingSide} looks more stable in recent price movement`);
+        parts.push(`${losingLabel} looks more stable in recent price movement`);
     }
-    else if (stabilityItem?.betterSide === winningSide.toLowerCase()) {
-        parts.push(`${winningSide.toLowerCase()} also looks more stable in recent price movement`);
+    else if (stabilityItem?.betterSide === winningSide) {
+        parts.push(`${winningLabel} also looks more stable in recent price movement`);
     }
     if (parts.length === 0) {
         return 'The two assets are mixed across liquidity, size, and recent stability.';
@@ -150,7 +159,7 @@ function buildSummary(items) {
 export function generateComparativeIntelligence(left, right) {
     const items = [buildLiquidityInsight(left, right), buildSizeInsight(left, right), buildStabilityInsight(left, right)];
     return {
-        summary: buildSummary(items),
+        summary: buildSummary(items, left, right),
         items
     };
 }
