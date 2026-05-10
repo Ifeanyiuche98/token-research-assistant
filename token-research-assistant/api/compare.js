@@ -6,6 +6,7 @@ import { mapToSector } from '../src/utils/mapToSector.js';
 import { getSectorIntelligence } from '../src/utils/getSectorIntelligence.js';
 import { generateComparativeIntelligence } from '../src/utils/generateComparativeIntelligence.js';
 import { generateGladysCompareInsight } from '../src/utils/generateGladysCompareInsight.js';
+import { generateGladysCompareInsightV2 } from '../src/utils/generateGladysCompareInsightV2.js';
 
 function json(res, statusCode, body) {
   res.status(statusCode);
@@ -227,14 +228,22 @@ export default async function handler(req, res) {
       right: rightBody,
       comparativeIntelligence,
       gladysInsight: null,
+      gladysV2Insight: null,
       meta: {
         generatedAt: new Date().toISOString()
       }
     };
 
-    return json(res, 200, {
+    const gladysInsight = generateGladysCompareInsight(baseComparison);
+    const comparisonWithGladys = {
       ...baseComparison,
-      gladysInsight: generateGladysCompareInsight(baseComparison)
+      gladysInsight
+    };
+    const gladysV2Insight = await generateGladysCompareInsightV2(comparisonWithGladys);
+
+    return json(res, 200, {
+      ...comparisonWithGladys,
+      gladysV2Insight
     });
   } catch (error) {
     return json(res, 500, {
@@ -247,6 +256,7 @@ export default async function handler(req, res) {
       right: null,
       comparativeIntelligence: null,
       gladysInsight: null,
+      gladysV2Insight: null,
       meta: {
         generatedAt: new Date().toISOString()
       }
