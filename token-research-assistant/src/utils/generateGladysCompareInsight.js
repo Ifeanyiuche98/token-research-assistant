@@ -115,12 +115,21 @@ function getOutcomeLabels(outcome, left, right) {
     }
     return { strongerLabel: 'Neither side', weakerLabel: 'neither asset' };
 }
+function getWinningReasons(comparison, winningSide, leftName, rightName) {
+    return (comparison.comparativeIntelligence?.items ?? [])
+        .filter((item) => item.betterSide === winningSide)
+        .map((item) => replaceSideLabels(item.summary, leftName, rightName));
+}
 function buildReasons(comparison, outcome, left, right, riskEdge) {
     if (outcome === 'tie') {
+        const bothLimited = left.limitedData && right.limitedData;
+        const oneLimited = left.limitedData !== right.limitedData;
         return unique([
+            bothLimited ? 'Both sides still need manual verification because the comparison is leaning on fallback-heavy or incomplete market data.' : null,
+            oneLimited ? 'One side has a weaker data path, which keeps this from being treated as a clean like-for-like decision.' : null,
             comparison.comparativeIntelligence?.summary,
-            left.limitedData || right.limitedData ? 'Data quality is uneven enough that the comparison still needs manual verification.' : null,
-            riskEdge === 'tie' ? 'Neither side has a decisive risk advantage from the visible data.' : null
+            riskEdge === 'tie' ? 'Neither side has a decisive risk advantage from the visible data.' : null,
+            !bothLimited && !oneLimited ? 'The visible signals stay close enough that this still reads as a trade-off rather than a decisive winner.' : null
         ]).slice(0, 3);
     }
     const winningSide = outcome;
@@ -130,13 +139,98 @@ function buildReasons(comparison, outcome, left, right, riskEdge) {
         losingAssessment.severeRisk ? `${losingAssessment.name} has at least one severe caution signal weighing on the comparison.` : null,
         winningAssessment.limitedData === false && losingAssessment.limitedData === true ? `${winningAssessment.name} has the cleaner data path, while ${losingAssessment.name} is more limited or fallback-heavy.` : null,
         riskEdge === winningSide ? `${winningAssessment.name} carries the cleaner visible risk posture right now.` : null,
-        comparison.comparativeIntelligence?.items.find((item) => item.key === 'liquidity' && item.betterSide === winningSide)?.summary,
-        comparison.comparativeIntelligence?.items.find((item) => item.key === 'size' && item.betterSide === winningSide)?.summary,
-        comparison.comparativeIntelligence?.items.find((item) => item.key === 'stability' && item.betterSide === winningSide)?.summary,
+        ...getWinningReasons(comparison, winningSide, left.name, right.name),
         winningAssessment.sourceConfidence > losingAssessment.sourceConfidence ? `${winningAssessment.name} comes through the stronger source path, which improves confidence in the read.` : null
-    ])
-        .map((summary) => replaceSideLabels(summary, left.name, right.name))
-        .slice(0, 3);
+    ]).slice(0, 3);
+}
+function buildHeadline(outcome, strongerLabel, left, right, riskEdge) {
+    if (outcome === 'tie') {
+        if (left.limitedData || right.limitedData)
+            return 'GLADYS: No clean winner yet';
+        if (riskEdge !== 'tie')
+            return 'GLADYS: Close call with one cleaner risk profile';
+        return 'GLADYS: No clean winner yet';
+    }
+    const winner = outcome === 'left' ? left : right;
+    const loser = outcome === 'left' ? right : left;
+    if (loser.severeRisk)
+        return `GLADYS: ${strongerLabel} looks safer on this setup`;
+    if (winner.limitedData === false && loser.limitedData === true)
+        return `GLADYS: ${strongerLabel} has the cleaner read`;
+    if (riskEdge === outcome)
+        return `GLADYS: ${strongerLabel} looks structurally stronger`;
+    return `GLADYS: ${strongerLabel} has the clearer edge right now`;
+}
+function buildVerdict(comparison, outcome, strongerLabel, weakerLabel, left, right, riskEdge) {
+    if (outcome === 'tie') {
+        if (left.limitedData && right.limitedData) {
+            return `${left.name} and ${right.name} still need a caution-first read because both sides are leaning on incomplete or fallback-heavy data.`;
+        }
+        if (left.limitedData || right.limitedData) {
+            return `${left.name} and ${right.name} still look mixed overall, and the weaker data path keeps this from becoming a clean winner-versus-loser call.`;
+        }
+        if (riskEdge !== 'tie') {
+            const cleaner = riskEdge === 'left' ? left.name : right.name;
+            return `${left.name} and ${right.name} remain close overall, but ${cleaner} carries the cleaner visible risk posture in this snapshot.`;
+        }
+        return `${left.name} and ${right.name} still look mixed overall, so this is better treated as a trade-off than a clear winner-versus-loser setup.`;
+    }
+    const winner = outcome === 'left' ? left : right;
+    const loser = outcome === 'left' ? right : left;
+    const winnerWins = countSideWins(comparison, outcome);
+    if (loser.severeRisk) {
+        return `${strongerLabel} currently looks like the safer side because ${weakerLabel} carries at least one heavier caution signal in the current read.`;
+    }
+    if (winner.limitedData === false && loser.limitedData === true) {
+        return `${strongerLabel} currently has the cleaner overall read, while ${weakerLabel} is harder to trust because more of its path is limited or fallback-heavy.`;
+    }
+    if (winnerWins >= 2 && riskEdge === outcome) {
+        return `${strongerLabel} currently has the clearer edge because the visible metrics and risk posture are lining up on the same side.`;
+    }
+    return `${strongerLabel} currently looks stronger on balance, while ${weakerLabel} needs more caution unless its weaker signals improve.`;
+}
+function buildCaution(outcome, strongerLabel, weakerLabel, left, right) {
+    if (outcome === 'tie') {
+        if (left.limitedData || right.limitedData) {
+            return 'Main caution: a cautious tie does not mean the assets are equally trustworthy — it may just mean the current data is too uneven to separate them cleanly.';
+        }
+        return 'Main caution: similar-looking metrics still do not mean both assets carry the same trust or downside profile.';
+    }
+    const loser = outcome === 'left' ? right : left;
+    if (loser.severeRisk) {
+        return `${strongerLabel} may look safer here, but that does not remove the need to verify token identity, liquidity depth, and downside scenarios manually.`;
+    }
+    return `${strongerLabel} looks better on balance, but that still does not make it automatically safe or ${weakerLabel} automatically weak.`;
+}
+function buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge) {
+    if (outcome === 'tie') {
+        if (left.limitedData || right.limitedData) {
+            return 'Confidence: limited to moderate, because the comparison still includes uneven or fallback-heavy data.';
+        }
+        if (riskEdge !== 'tie') {
+            const cleaner = riskEdge === 'left' ? left.name : right.name;
+            return `Confidence: moderate, because the overall setup is still close even though ${cleaner} has the cleaner visible risk posture.`;
+        }
+        return 'Confidence: moderate, because neither side created a decisive enough edge to call this cleanly.';
+    }
+    const winner = outcome === 'left' ? left : right;
+    const loser = outcome === 'left' ? right : left;
+    if (winner.limitedData) {
+        return `Confidence: moderate, but ${strongerLabel} still has some data limitations worth verifying manually.`;
+    }
+    if (loser.limitedData) {
+        return `Confidence: moderate, with extra trust in ${strongerLabel} because the opposite side is more fallback-heavy.`;
+    }
+    if (loser.severeRisk) {
+        return `Confidence: moderate, because ${strongerLabel} benefits from a cleaner safety profile rather than just a small metric edge.`;
+    }
+    if (winner.sourceConfidence === loser.sourceConfidence && riskEdge === outcome) {
+        return `Confidence: moderate, because both assets come through similarly reliable source paths and ${strongerLabel} still keeps the cleaner visible setup.`;
+    }
+    if (winner.sourceConfidence === loser.sourceConfidence) {
+        return 'Confidence: moderate, because both assets come through similarly reliable source paths.';
+    }
+    return `Confidence: moderate, with a cleaner read on ${strongerLabel} because its source path looks stronger.`;
 }
 export function generateGladysCompareInsight(comparison) {
     const left = buildSideAssessment(comparison, 'left');
@@ -145,23 +239,11 @@ export function generateGladysCompareInsight(comparison) {
     const outcome = chooseOutcome(left, right);
     const { strongerLabel, weakerLabel } = getOutcomeLabels(outcome, left, right);
     const reasons = buildReasons(comparison, outcome, left, right, riskEdge);
-    const headline = outcome === 'tie' ? 'GLADYS: No clean winner yet' : `GLADYS: ${strongerLabel} looks structurally stronger`;
-    const verdict = outcome === 'tie'
-        ? `${left.name} and ${right.name} still look mixed overall, so this is better treated as a trade-off than a clear winner-versus-loser setup.`
-        : `${strongerLabel} currently looks stronger on balance, while ${weakerLabel} needs more caution unless its weaker signals improve.`;
-    const caution = outcome === 'tie'
-        ? 'Main caution: similar-looking metrics still do not mean both assets carry the same trust or downside profile.'
-        : `${strongerLabel} looks better on balance, but that still does not make it automatically safe or ${weakerLabel} automatically weak.`;
-    const confidenceNote = outcome === 'tie'
-        ? left.limitedData || right.limitedData
-            ? 'Confidence: limited to moderate, because the comparison still includes uneven or fallback-heavy data.'
-            : 'Confidence: moderate, because neither side created a decisive enough edge to call this cleanly.'
-        : (outcome === 'left' ? left : right).limitedData
-            ? `Confidence: moderate, but ${strongerLabel} still has some data limitations worth verifying manually.`
-            : left.sourceConfidence === right.sourceConfidence
-                ? 'Confidence: moderate, because both assets come through similarly reliable source paths.'
-                : `Confidence: moderate, with a cleaner read on ${strongerLabel} because its source path looks stronger.`;
-    const tone = outcome === 'tie' ? 'caution' : (outcome === riskEdge || (outcome === 'left' ? right : left).severeRisk ? 'positive' : 'neutral');
+    const headline = buildHeadline(outcome, strongerLabel, left, right, riskEdge);
+    const verdict = buildVerdict(comparison, outcome, strongerLabel, weakerLabel, left, right, riskEdge);
+    const caution = buildCaution(outcome, strongerLabel, weakerLabel, left, right);
+    const confidenceNote = buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge);
+    const tone = outcome === 'tie' ? 'caution' : outcome === riskEdge || (outcome === 'left' ? right : left).severeRisk ? 'positive' : 'neutral';
     return {
         headline,
         verdict,

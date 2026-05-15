@@ -23,3 +23,4 @@
 - Ifeanyi explicitly wants step-by-step continuity captured in memory as work progresses so recovery after outages or unforeseen interruptions is easy.
 - Preference recorded on 2026-05-08: log meaningful progress steps during active work, not just final outcomes.
 - Added on 2026-05-10: after the compare polish pass, we should deliberately revisit the Token Research Assistant UI/UX direction and plan for a more professional top-tier experience, with strong theme decisions, better typography, readable color choices, and higher overall design polish before or alongside later product polish work.
+- Added on 2026-05-15: planned GLADYS v2 direction should include a future integration path for Pete's local machine compute API once Pete is ready and explicitly grants access; this should be treated as a likely provider target for GLADYS v2 rather than forgotten as a side note.
