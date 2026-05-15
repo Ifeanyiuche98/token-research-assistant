@@ -388,3 +388,89 @@ test('explains fallback-heavy ties as data-quality problems instead of simple tr
   assert.match(insight.caution, /data is too uneven/);
   assert.ok(insight.reasons.some((reason) => reason.includes('fallback-heavy or incomplete market data')));
 });
+
+test('distinguishes credible large-cap losers from weaker setups', () => {
+  const left = makeResearchResponse({
+    raw: 'Bitcoin',
+    name: 'Bitcoin',
+    symbol: 'BTC',
+    marketCapUsd: 2000000000000,
+    volume24hUsd: 45000000000,
+    change24hPct: 2.1,
+    riskLevel: 'low',
+    riskScore: 2.4,
+    trustLabel: 'safe'
+  });
+
+  const right = makeResearchResponse({
+    raw: 'Ethereum',
+    name: 'Ethereum',
+    symbol: 'ETH',
+    marketCapUsd: 650000000000,
+    volume24hUsd: 30000000000,
+    change24hPct: 3.8,
+    riskLevel: 'medium',
+    riskScore: 4.8,
+    trustLabel: 'safe'
+  });
+
+  const comparison = makeComparison({
+    left,
+    right,
+    items: [
+      { key: 'liquidity', label: 'Liquidity', betterSide: 'left', summary: 'Left shows stronger liquidity based on higher 24h volume.' },
+      { key: 'size', label: 'Size', betterSide: 'left', summary: 'Left is larger by market capitalization.' },
+      { key: 'stability', label: 'Stability', betterSide: 'tie', summary: 'Both assets show similar short-term price stability.' }
+    ],
+    summary: 'Bitcoin still looks like the stronger large-cap setup with a much larger market footprint and noticeably deeper trading activity, while recent price stability still looks broadly similar.'
+  });
+
+  const insight = generateGladysCompareInsight(comparison);
+  assert.match(insight.headline, /stronger large-cap setup/);
+  assert.match(insight.verdict, /stronger large-cap choice/);
+  assert.match(insight.confidenceNote, /credible large-cap names/);
+  assert.ok(insight.reasons.some((reason) => reason.includes('still looks credible')));
+});
+
+test('distinguishes higher-beta losers from credible large-cap losers', () => {
+  const left = makeResearchResponse({
+    raw: 'Bitcoin',
+    name: 'Bitcoin',
+    symbol: 'BTC',
+    marketCapUsd: 2000000000000,
+    volume24hUsd: 45000000000,
+    change24hPct: 2.1,
+    riskLevel: 'low',
+    riskScore: 2.4,
+    trustLabel: 'safe'
+  });
+
+  const right = makeResearchResponse({
+    raw: 'Solana',
+    name: 'Solana',
+    symbol: 'SOL',
+    marketCapUsd: 80000000000,
+    volume24hUsd: 12000000000,
+    change24hPct: 6.4,
+    riskLevel: 'medium',
+    riskScore: 5.2,
+    trustLabel: 'warning'
+  });
+
+  const comparison = makeComparison({
+    left,
+    right,
+    items: [
+      { key: 'liquidity', label: 'Liquidity', betterSide: 'left', summary: 'Left shows stronger liquidity based on higher 24h volume.' },
+      { key: 'size', label: 'Size', betterSide: 'left', summary: 'Left is larger by market capitalization.' },
+      { key: 'stability', label: 'Stability', betterSide: 'tie', summary: 'Both assets show similar short-term price stability.' }
+    ],
+    summary: 'Bitcoin still looks like the stronger large-cap setup with a much larger market footprint and noticeably deeper trading activity, while recent price stability still looks broadly similar.'
+  });
+
+  const insight = generateGladysCompareInsight(comparison);
+  assert.match(insight.headline, /stronger large-cap setup/);
+  assert.match(insight.verdict, /steadier structural choice/);
+  assert.match(insight.confidenceNote, /more aggressive profile/);
+  assert.ok(insight.reasons.some((reason) => reason.includes('faster-moving profile')));
+});

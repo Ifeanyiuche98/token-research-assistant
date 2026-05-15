@@ -17,6 +17,18 @@ function getSourceConfidence(response) {
         return 1;
     return 2;
 }
+function getMarketCap(response) {
+    const value = response.result?.market?.marketCapUsd;
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+function getVolume(response) {
+    const value = response.result?.market?.volume24hUsd;
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+function getAbsMove(response) {
+    const value = response.result?.market?.change24hPct;
+    return typeof value === 'number' && Number.isFinite(value) ? Math.abs(value) : null;
+}
 function riskWeight(level) {
     switch (level) {
         case 'low':
@@ -120,6 +132,43 @@ function getWinningReasons(comparison, winningSide, leftName, rightName) {
         .filter((item) => item.betterSide === winningSide)
         .map((item) => replaceSideLabels(item.summary, leftName, rightName));
 }
+function isBlueChip(response) {
+    const marketCap = getMarketCap(response);
+    return marketCap !== null && marketCap >= 10000000000;
+}
+function describeLoserProfile(winnerResponse, loserResponse) {
+    if (hasLimitedData(loserResponse))
+        return 'fallback-heavy';
+    const winnerCap = getMarketCap(winnerResponse);
+    const loserCap = getMarketCap(loserResponse);
+    const loserRatio = winnerCap !== null && loserCap !== null && winnerCap > 0 ? loserCap / winnerCap : null;
+    if (isBlueChip(loserResponse) && isBlueChip(winnerResponse) && loserCap !== null && loserCap >= 150000000000 && loserRatio !== null && loserRatio >= 0.2) {
+        return 'credible-large-cap';
+    }
+    if (isBlueChip(winnerResponse))
+        return 'higher-beta';
+    return 'standard';
+}
+function getSummarySignal(comparison) {
+    const summary = comparison.comparativeIntelligence?.summary?.toLowerCase() ?? '';
+    if (summary.includes('stronger large-cap setup'))
+        return 'large-cap-setup';
+    if (summary.includes('stronger market-structure setup'))
+        return 'market-structure';
+    if (summary.includes('real trade-off'))
+        return 'trade-off';
+    if (summary.includes('larger market footprint'))
+        return 'market-footprint';
+    return 'generic';
+}
+function getMetricWinners(comparison, winningSide) {
+    const winningItems = (comparison.comparativeIntelligence?.items ?? []).filter((item) => item.betterSide === winningSide).map((item) => item.key);
+    return {
+        hasLiquidity: winningItems.includes('liquidity'),
+        hasSize: winningItems.includes('size'),
+        hasStability: winningItems.includes('stability')
+    };
+}
 function buildReasons(comparison, outcome, left, right, riskEdge) {
     if (outcome === 'tie') {
         const bothLimited = left.limitedData && right.limitedData;
@@ -135,15 +184,23 @@ function buildReasons(comparison, outcome, left, right, riskEdge) {
     const winningSide = outcome;
     const winningAssessment = winningSide === 'left' ? left : right;
     const losingAssessment = winningSide === 'left' ? right : left;
+    const winningResponse = comparison[winningSide];
+    const losingResponse = comparison[winningSide === 'left' ? 'right' : 'left'];
+    const loserProfile = describeLoserProfile(winningResponse, losingResponse);
     return unique([
         losingAssessment.severeRisk ? `${losingAssessment.name} has at least one severe caution signal weighing on the comparison.` : null,
-        winningAssessment.limitedData === false && losingAssessment.limitedData === true ? `${winningAssessment.name} has the cleaner data path, while ${losingAssessment.name} is more limited or fallback-heavy.` : null,
+        winnerResponseHasCleanerData(winningResponse, losingResponse) ? `${winningAssessment.name} has the cleaner data path, while ${losingAssessment.name} is more limited or fallback-heavy.` : null,
         riskEdge === winningSide ? `${winningAssessment.name} carries the cleaner visible risk posture right now.` : null,
+        loserProfile === 'credible-large-cap' ? `${losingAssessment.name} still looks credible, but ${winningAssessment.name} keeps the stronger structure in this snapshot.` : null,
+        loserProfile === 'higher-beta' ? `${losingAssessment.name} may still offer a faster-moving profile, but ${winningAssessment.name} keeps the cleaner overall structure right now.` : null,
         ...getWinningReasons(comparison, winningSide, left.name, right.name),
         winningAssessment.sourceConfidence > losingAssessment.sourceConfidence ? `${winningAssessment.name} comes through the stronger source path, which improves confidence in the read.` : null
     ]).slice(0, 3);
 }
-function buildHeadline(outcome, strongerLabel, left, right, riskEdge) {
+function winnerResponseHasCleanerData(winnerResponse, loserResponse) {
+    return hasLimitedData(winnerResponse) === false && hasLimitedData(loserResponse) === true;
+}
+function buildHeadline(outcome, strongerLabel, left, right, riskEdge, comparison) {
     if (outcome === 'tie') {
         if (left.limitedData || right.limitedData)
             return 'GLADYS: No clean winner yet';
@@ -153,10 +210,17 @@ function buildHeadline(outcome, strongerLabel, left, right, riskEdge) {
     }
     const winner = outcome === 'left' ? left : right;
     const loser = outcome === 'left' ? right : left;
+    const winnerResponse = comparison[outcome];
+    const loserResponse = comparison[outcome === 'left' ? 'right' : 'left'];
+    const summarySignal = getSummarySignal(comparison);
     if (loser.severeRisk)
         return `GLADYS: ${strongerLabel} looks safer on this setup`;
     if (winner.limitedData === false && loser.limitedData === true)
         return `GLADYS: ${strongerLabel} has the cleaner read`;
+    if (summarySignal === 'large-cap-setup' && isBlueChip(winnerResponse) && isBlueChip(loserResponse))
+        return `GLADYS: ${strongerLabel} looks like the stronger large-cap setup`;
+    if (summarySignal === 'market-structure')
+        return `GLADYS: ${strongerLabel} looks stronger on market structure`;
     if (riskEdge === outcome)
         return `GLADYS: ${strongerLabel} looks structurally stronger`;
     return `GLADYS: ${strongerLabel} has the clearer edge right now`;
@@ -177,12 +241,26 @@ function buildVerdict(comparison, outcome, strongerLabel, weakerLabel, left, rig
     }
     const winner = outcome === 'left' ? left : right;
     const loser = outcome === 'left' ? right : left;
+    const winnerResponse = comparison[outcome];
+    const loserResponse = comparison[outcome === 'left' ? 'right' : 'left'];
     const winnerWins = countSideWins(comparison, outcome);
+    const summarySignal = getSummarySignal(comparison);
+    const loserProfile = describeLoserProfile(winnerResponse, loserResponse);
+    const metricWinners = getMetricWinners(comparison, outcome);
     if (loser.severeRisk) {
         return `${strongerLabel} currently looks like the safer side because ${weakerLabel} carries at least one heavier caution signal in the current read.`;
     }
     if (winner.limitedData === false && loser.limitedData === true) {
         return `${strongerLabel} currently has the cleaner overall read, while ${weakerLabel} is harder to trust because more of its path is limited or fallback-heavy.`;
+    }
+    if (summarySignal === 'large-cap-setup' && loserProfile === 'credible-large-cap') {
+        return `${strongerLabel} still looks like the stronger large-cap choice here, while ${weakerLabel} remains credible but less convincing on this snapshot.`;
+    }
+    if (summarySignal === 'large-cap-setup' && loserProfile === 'higher-beta') {
+        return `${strongerLabel} still looks like the steadier structural choice here, while ${weakerLabel} reads as the more aggressive but less clean setup.`;
+    }
+    if (metricWinners.hasLiquidity && metricWinners.hasSize && riskEdge === outcome) {
+        return `${strongerLabel} currently has the clearer edge because liquidity, scale, and visible risk posture are all leaning in the same direction.`;
     }
     if (winnerWins >= 2 && riskEdge === outcome) {
         return `${strongerLabel} currently has the clearer edge because the visible metrics and risk posture are lining up on the same side.`;
@@ -202,7 +280,7 @@ function buildCaution(outcome, strongerLabel, weakerLabel, left, right) {
     }
     return `${strongerLabel} looks better on balance, but that still does not make it automatically safe or ${weakerLabel} automatically weak.`;
 }
-function buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge) {
+function buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge, comparison) {
     if (outcome === 'tie') {
         if (left.limitedData || right.limitedData) {
             return 'Confidence: limited to moderate, because the comparison still includes uneven or fallback-heavy data.';
@@ -215,6 +293,10 @@ function buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge) {
     }
     const winner = outcome === 'left' ? left : right;
     const loser = outcome === 'left' ? right : left;
+    const winnerResponse = comparison[outcome];
+    const loserResponse = comparison[outcome === 'left' ? 'right' : 'left'];
+    const loserProfile = describeLoserProfile(winnerResponse, loserResponse);
+    const summarySignal = getSummarySignal(comparison);
     if (winner.limitedData) {
         return `Confidence: moderate, but ${strongerLabel} still has some data limitations worth verifying manually.`;
     }
@@ -223,6 +305,12 @@ function buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge) {
     }
     if (loser.severeRisk) {
         return `Confidence: moderate, because ${strongerLabel} benefits from a cleaner safety profile rather than just a small metric edge.`;
+    }
+    if (summarySignal === 'large-cap-setup' && loserProfile === 'credible-large-cap') {
+        return `Confidence: moderate, because both assets are still credible large-cap names even though ${strongerLabel} keeps the cleaner structure here.`;
+    }
+    if (summarySignal === 'large-cap-setup' && loserProfile === 'higher-beta') {
+        return `Confidence: moderate, because ${strongerLabel} has the cleaner large-cap structure while ${loser.name} still carries the more aggressive profile.`;
     }
     if (winner.sourceConfidence === loser.sourceConfidence && riskEdge === outcome) {
         return `Confidence: moderate, because both assets come through similarly reliable source paths and ${strongerLabel} still keeps the cleaner visible setup.`;
@@ -239,10 +327,10 @@ export function generateGladysCompareInsight(comparison) {
     const outcome = chooseOutcome(left, right);
     const { strongerLabel, weakerLabel } = getOutcomeLabels(outcome, left, right);
     const reasons = buildReasons(comparison, outcome, left, right, riskEdge);
-    const headline = buildHeadline(outcome, strongerLabel, left, right, riskEdge);
+    const headline = buildHeadline(outcome, strongerLabel, left, right, riskEdge, comparison);
     const verdict = buildVerdict(comparison, outcome, strongerLabel, weakerLabel, left, right, riskEdge);
     const caution = buildCaution(outcome, strongerLabel, weakerLabel, left, right);
-    const confidenceNote = buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge);
+    const confidenceNote = buildConfidenceNote(outcome, strongerLabel, left, right, riskEdge, comparison);
     const tone = outcome === 'tie' ? 'caution' : outcome === riskEdge || (outcome === 'left' ? right : left).severeRisk ? 'positive' : 'neutral';
     return {
         headline,

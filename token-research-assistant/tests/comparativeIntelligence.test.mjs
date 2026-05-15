@@ -130,3 +130,53 @@ test('uses the present token name when the opposite side is fallback or missing'
   assert.equal(intelligence.items[2].summary, 'SteadyChain looks more stable based on smaller 24h price movement.');
   assert.ok(intelligence.items.every((item) => !/\bLeft\b|\bRight\b/.test(item.summary)));
 });
+
+test('uses more differentiated winner summaries for strong live-vs-live pairs', () => {
+  const bitcoin = makeResearchResponse({
+    raw: 'Bitcoin',
+    name: 'Bitcoin',
+    symbol: 'BTC',
+    marketCapUsd: 2000000000000,
+    volume24hUsd: 45000000000,
+    change24hPct: 2.1
+  });
+
+  const ethereum = makeResearchResponse({
+    raw: 'Ethereum',
+    name: 'Ethereum',
+    symbol: 'ETH',
+    marketCapUsd: 650000000000,
+    volume24hUsd: 30000000000,
+    change24hPct: 5.4
+  });
+
+  const intelligence = generateComparativeIntelligence(bitcoin, ethereum);
+  assert.match(intelligence.summary, /stronger large-cap setup/);
+  assert.match(intelligence.summary, /larger market footprint/);
+  assert.match(intelligence.summary, /Ethereum looks steadier|recent price stability still looks broadly similar|Bitcoin also looks steadier/);
+});
+
+test('uses mixed-summary wording when liquidity and size point in different directions', () => {
+  const left = makeResearchResponse({
+    raw: 'FastToken',
+    name: 'FastToken',
+    symbol: 'FAST',
+    marketCapUsd: 400000000,
+    volume24hUsd: 90000000,
+    change24hPct: 6.1
+  });
+
+  const right = makeResearchResponse({
+    raw: 'BigToken',
+    name: 'BigToken',
+    symbol: 'BIG',
+    marketCapUsd: 900000000,
+    volume24hUsd: 50000000,
+    change24hPct: 3.2
+  });
+
+  const intelligence = generateComparativeIntelligence(left, right);
+  assert.match(intelligence.summary, /looks more liquid right now/);
+  assert.match(intelligence.summary, /larger market footprint/);
+  assert.match(intelligence.summary, /real trade-off/);
+});
